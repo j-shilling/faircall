@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <getopt.h>
 
 #include <libxml/parser.h>
 
@@ -488,6 +489,8 @@ get_root (xmlDocPtr doc)
 		xmlFreeDoc(doc);
 		exit (EXIT_FAILURE);
 	}
+
+	return root;
 }
 
 static student_t *
@@ -514,7 +517,7 @@ print_stats (student_t *cur, student_t *prev, student_t *last)
 	int slots = cur->max_index - pind;
 
 	float odds = ((last_index >= (pind + 1)) && (last_index <= cur->max_index)) ?
-		0 : ((float) slots / (float) (lind + 1)) * 100;
+		0 : ((float) slots / (float) lind) * 100;
 
 
 	printf ("odds of getting called next: %3.2f %%\n", odds);

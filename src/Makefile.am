@@ -1,8 +1,6 @@
-bin_PROGRAMS = caller
-caller_SOURCES = main.c \
+bin_PROGRAMS = faircall
+faircall_SOURCES = main.c \
 		 student.c \
-		 list.c \
-		 index.c \
-		 encode.c
-caller_CFLAGS = $(XML_CFLAGS)
-caller_LDADD= $(XML_LIBS)
+		 list.c
+faircall_CFLAGS = $(XML_CFLAGS)
+faircall_LDADD= $(XML_LIBS)

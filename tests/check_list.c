@@ -233,17 +233,19 @@ find_outliers(int *set,
 	int max = q3 + (iqr * 1.5);
 	int min = q1 - (iqr * 1.5);
 
+	printf("\n");
 	for (int i = 0; i < count; i++) {
-		printf ("%d: %d\n", i, set[i]);
+		printf ("%d:\t%d\n", i, set[i]);
 		ck_assert_msg (set[i] >= min, "%d is not in [%d, %d]\n", set[i], min, max);
 		ck_assert_msg (set[i] <= max, "%d is not in [%d, %d]\n", set[i], min, max);
 	}
+	printf("\n");
 }
 
 START_TEST (test_call_student)
 {
-	const unsigned int nstudents = 50;
-	const unsigned int ntests = 10000000;
+	const unsigned int nstudents = 25;
+	const unsigned int ntests = 1000000;
 
 	/*
 	 * Build List of with nstudents
@@ -293,10 +295,12 @@ START_TEST (test_call_student)
 	{
 		set[i] = list->item->times_called_on;
 
+		i++;
 		list = list->next;
 	}
 
 	find_outliers (set, nstudents);
+
 	free (set);
 
 
