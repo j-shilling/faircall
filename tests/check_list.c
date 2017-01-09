@@ -5,6 +5,8 @@
 #include "../src/list.h"
 #include "../src/student.h"
 
+#include "stats.h"
+
 START_TEST (test_new_list_node)
 {
 	list_node_t *list = new_list_node(NULL);
@@ -200,10 +202,10 @@ START_TEST(test_get_max_index)
 }
 END_TEST
 
-START_TEST (test_call_student)
+START_TEST (test_call_student_never_twice)
 {
 	const unsigned int nstudents = 25;
-	const unsigned int ntests = 1000000;
+	const unsigned int ntests = 100;
 
 	/*
 	 * Build List of with nstudents
@@ -244,6 +246,61 @@ START_TEST (test_call_student)
 }
 END_TEST
 
+START_TEST (test_call_student_fair)
+{
+	const unsigned int nstudents = 25;
+	const unsigned int ntests = 100;
+
+	/*
+	 * Build List of with nstudents
+	 */
+	list_node_t *list = NULL;
+
+	for (int i = 0; i < nstudents; i++)
+	{
+		char name[256];
+		sprintf (name, "%i", i);
+		student_t *student = new_student (name);
+
+		if (list)
+			add (list, student);
+		else
+			list = new_list_node (student);
+	}
+
+	/*
+	 * Run test ntests times
+	 */
+	unsigned int index = 0;
+	student_t *ret = NULL;
+	for (int i = 0; i < ntests; i++)
+	{
+		index = call_student (list, index, &ret);
+	}
+
+	/*
+	 * Get dataset
+	 */
+
+	double *vals = (double *) malloc (sizeof (double) * nstudents);
+
+	int i = 0;
+	list_node_t *cur = list;
+	while (cur)
+	{
+		vals[i] = (double) list->item->times_called_on;
+		cur = cur->next;
+	}
+	free_list_node (list);
+
+	ck_assert (no_outliers(vals, nstudents));
+	ck_assert (low_variance(vals, nstudents));
+
+	free (vals);
+
+}
+END_TEST
+
 int main (void)
 {
 	int number_failed;
@@ -261,7 +318,8 @@ int main (void)
 	tcase_add_test(tc_core, test_get_min);
 	tcase_add_test(tc_core, test_get_max);
 	tcase_add_test(tc_core, test_update);
-	tcase_add_test(tc_core, test_call_student);
+	tcase_add_test(tc_core, test_call_student_never_twice);
+	tcase_add_test(tc_core, test_call_student_fair);
 	suite_add_tcase(s, tc_core);
 
 	sr = srunner_create(s);

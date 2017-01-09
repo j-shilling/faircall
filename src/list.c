@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
+#include <errno.h>
 
 #include "index.h"
 #include "list.h"
@@ -166,12 +168,25 @@ call_student (list_node_t *node, const unsigned int last_called, student_t **ret
 		min = 0;
 	}
 
+	double val = 0;
 	FILE *f = fopen ("/dev/urandom", "r");
 
-	unsigned char byte = 0;
-	fread (&byte, sizeof(byte), 1, f);
+	if (f)
+	{
+		unsigned char byte = 0;
+		fread (&byte, sizeof(byte), 1, f);
 
-	int r = (int)((int) byte / 256 * (max -min + 1));
+		val = (double) byte / 256.0;
+	}
+	else
+	{
+		fprintf (stderr,
+			"WARNING: could not open /dev/urandom\n%s\n", strerror (errno));
+		srand (time(NULL));
+		val = (double) rand() / (double) RAND_MAX;
+	}
+
+	int r = (int)(val * (max - min + 1));
 	unsigned int index = r + min;
 
 
