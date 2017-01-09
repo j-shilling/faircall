@@ -6,6 +6,7 @@
 #include <string.h>
 #include <errno.h>
 #include <getopt.h>
+#include <sys/stat.h>
 
 #include <libxml/parser.h>
 
@@ -18,9 +19,10 @@
 /*
  * CONST STRING MACROS
  */
-#define ARGSTR		"?1a:f:i:"
+#define ARGSTR		"?1ma:f:i:d:"
 
 #define DOCNAME		"roster"
+
 #define TYPE		"student"
 #define NAME		"name"
 #define CALLED		"called"
@@ -63,13 +65,19 @@ static xmlNodePtr get_root (xmlDocPtr doc);
 static student_t *parse_student (xmlNodePtr node);
 // print student info
 static void print_stats (student_t *cur, student_t *prev, student_t *last);
+// get path to doc
+static char *get_doc_name ();
 
 /*
  * GLOBAL VARS
  */
+char *file = NULL;
+
 list_node_t *list = NULL;
 char *class = NULL;
 unsigned int last_index = 0;
+
+bool machine = false;
 
 
 int
@@ -82,7 +90,27 @@ main (int argc, char** argv)
 	/*
 	 * Get the class identifier
 	 */
-	while (getopt (argc, argv, ARGSTR) != -1) { } 
+	int c;
+	while ( (c = getopt (argc, argv, ARGSTR)) != -1 )
+	{
+		switch (c)
+		{
+			case 'm':
+				machine = true;
+				continue;
+
+			case 'd':
+				file = strdup (optarg);
+				continue;
+
+			case '1':
+				loop = false;
+				continue;
+
+			default:
+				continue;
+		}
+	} 
 	
 	if (optind < argc)
 	{
@@ -96,7 +124,6 @@ main (int argc, char** argv)
 	/*
 	 * Parse cmd line options
 	 */
-	int c;
 	while ( (c = getopt(argc, argv, ARGSTR)) != -1 )
 	{
 		switch (c)
@@ -204,10 +231,6 @@ main (int argc, char** argv)
 			}
 			run = false;
 			continue;
-		case '1':
-			loop = false;
-			continue;
-			
 
 		case '?':
 			{
@@ -222,6 +245,15 @@ main (int argc, char** argv)
 			}
 			run = false;
 			return EXIT_SUCCESS;
+
+		case '1':
+			continue;
+
+		case 'm':
+			continue;
+
+		case 'd':
+			continue;
 
 		default:
 			run = false;
@@ -390,7 +422,7 @@ add_student (char * name, char *class)
 	xmlNewProp(node, INDEX, buf);
 	xmlNewProp(node, CALLED, "0"); 
 
-	xmlSaveFormatFile (DOCNAME, doc, 0);
+	xmlSaveFormatFile (get_doc_name(), doc, 0);
 	xmlFreeDoc (doc);
 }
 
@@ -435,7 +467,7 @@ on_kill (int sig)
 		l = l->next;
 	}
 
-	xmlSaveFormatFile (DOCNAME, doc, 0);
+	xmlSaveFormatFile (get_doc_name(), doc, 0);
 	xmlFreeDoc (doc);
 	exit (EXIT_SUCCESS);
 }
@@ -444,7 +476,7 @@ static xmlDocPtr
 open_doc()
 {
 
-	if (access (DOCNAME, F_OK) != 0)
+	if (access (get_doc_name(), F_OK) != 0)
 	{
 		return NULL;
 	}
@@ -452,10 +484,10 @@ open_doc()
 	{
 		LIBXML_TEST_VERSION;
 
-		xmlDocPtr doc = xmlParseFile (DOCNAME);
+		xmlDocPtr doc = xmlParseFile (get_doc_name());
 
 		if (doc == NULL) {
-			fprintf (stderr, "Failed to parse xml document: %s\n", DOCNAME);
+			fprintf (stderr, "Failed to parse xml document: %s\n", get_doc_name());
 			exit (EXIT_FAILURE);
 		}
 		
@@ -485,7 +517,7 @@ get_root (xmlDocPtr doc)
 	xmlNodePtr root = xmlDocGetRootElement(doc);
 
 	if (root == NULL) {
-		fprintf (stderr, "Failed to get the root element of xml document: %s\n", DOCNAME);
+		fprintf (stderr, "Failed to get the root element of xml document: %s\n", get_doc_name());
 		xmlFreeDoc(doc);
 		exit (EXIT_FAILURE);
 	}
@@ -508,9 +540,6 @@ parse_student (xmlNodePtr node)
 static void
 print_stats (student_t *cur, student_t *prev, student_t *last)
 {
-	printf ("name: %s\n", cur->name);
-	printf ("times called on: %d\n", cur->times_called_on);
-
 	int pind = prev ? prev->max_index : -1;
 	int lind = last ? last->max_index : 0;
 
@@ -519,7 +548,50 @@ print_stats (student_t *cur, student_t *prev, student_t *last)
 	float odds = ((last_index >= (pind + 1)) && (last_index <= cur->max_index)) ?
 		0 : ((float) slots / (float) lind) * 100;
 
+	if (machine)
+	{
+		printf ("%s:%i:%3.2f\n", cur->name, cur->times_called_on, odds);
+	}
+	else
+	{
+		printf ("name: %s\n", cur->name);
+		printf ("times called on: %d\n", cur->times_called_on);
+		printf ("odds of getting called next: %3.2f %%\n", odds);
+	}
 
-	printf ("odds of getting called next: %3.2f %%\n", odds);
+}
 
+static char *
+get_doc_name ()
+{
+	if (!file)
+	{
+		char *dir = NULL;
+		if (asprintf (&dir, "%s/.%s", getenv ("HOME"), PACKAGE_NAME)
+				== -1)
+		{
+			fprintf (stderr,
+				"ERROR: could not allocate space for the dir name.\n");
+			exit (EXIT_FAILURE);
+		}
+
+		if (mkdir (dir, S_IRWXU) != 0)
+		{
+			if (errno != EEXIST)
+			{
+				fprintf (stderr, "ERROR: Could not create dir %s\n%s\n",
+						dir,
+						strerror (errno));
+				exit (EXIT_FAILURE);
+			}
+		}
+
+		if (asprintf (&file, "%s/%s", dir, DOCNAME) == -1)
+		{
+			fprintf (stderr, "ERROR: Could not allocate memmory to the file name.\n");
+			exit(EXIT_FAILURE);
+		}
+	}
+
+	return file;
 }

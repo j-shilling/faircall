@@ -200,48 +200,6 @@ START_TEST(test_get_max_index)
 }
 END_TEST
 
-int
-compare_ints (const void *a, const void *b)
-{
-
-	const int *da = (const int *) a;
-	const int *db = (const int *) b;
-
-	return (*da > *db) - (*da < *db);
-}
-
-void
-find_outliers(int *set,
-		int count)
-{
-	qsort (set, count, sizeof (int), compare_ints);
-
-	int median = ((count % 2) == 0) ?
-		set[count/2] + set[count/2 - 1] / 2.0
-		: set[count/2];
-
-	int q1 = ((count % 4) == 0) ?
-		set[count/4] + set[count/4 - 1] / 2.0
-		: set [count/4];
-
-	int q3 = (((3 * count) % 4) == 0) ?
-		set[(3 * count)/4] - set[(3 * count) / 4 - 1] / 2.0
-		: set [(3 * count) / 4];
-
-	int iqr = q3 - q1;
-
-	int max = q3 + (iqr * 1.5);
-	int min = q1 - (iqr * 1.5);
-
-	printf("\n");
-	for (int i = 0; i < count; i++) {
-		printf ("%d:\t%d\n", i, set[i]);
-		ck_assert_msg (set[i] >= min, "%d is not in [%d, %d]\n", set[i], min, max);
-		ck_assert_msg (set[i] <= max, "%d is not in [%d, %d]\n", set[i], min, max);
-	}
-	printf("\n");
-}
-
 START_TEST (test_call_student)
 {
 	const unsigned int nstudents = 25;
@@ -283,27 +241,6 @@ START_TEST (test_call_student)
 					cur->name,
 					last->name);
 	}
-
-	/*
-	 * Check for outliers
-	 */
-	int *set = (int *) malloc (sizeof (int) * nstudents);
-	int final = get_max_index (list);
-	int i = 0;
-
-	while (list)
-	{
-		set[i] = list->item->times_called_on;
-
-		i++;
-		list = list->next;
-	}
-
-	find_outliers (set, nstudents);
-
-	free (set);
-
-
 }
 END_TEST
 

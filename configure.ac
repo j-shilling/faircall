@@ -35,7 +35,7 @@ AC_CHECK_HEADER_STDBOOL
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([strdup strerror])
+AC_CHECK_FUNCS([asprintf strdup strerror])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile

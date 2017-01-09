@@ -4,6 +4,7 @@ import sys
 import os
 import subprocess
 import statistics
+import getopt
 
 def progress(count, total, status=''):
     bar_len = 60
@@ -15,14 +16,36 @@ def progress(count, total, status=''):
     sys.stdout.write('[%s] %s%s ...%s\r' % (bar, percents, '%', status))
     sys.stdout.flush() 
 
-nstudents = 30
-ncalls = 100
-ntests = 1000
+try:
+    opts, args = getopt.getopt(sys.argv[1:], "hs:c:t:e:", \
+            ["help","calls","tests","execute"])
+except getopt.GetoptError as err:
+    print(err)
+    usage()
+    sys.exit(2)
+
+nstudents = 10
+ntests = 10
+ncalls = 10
+
+for o, a in opts:
+    if o in ("-h", "--help"):
+        usage()
+        sys.exit()
+    elif o in ("-s", "--students"):
+        nstudents = int(a)
+    elif o in ("-c", "--calls"):
+        ncalls = int (a)
+    elif o in ("-t", "--tests"):
+        ntests = int (a)
+    elif o in ("-e", "--execute"):
+        cmd = str (a)
+    else:
+        assert False, "unhandled option"
 
 todo = (nstudents + ncalls) * ntests
 done = 0
 
-cmd = sys.argv[1]
 filename = "roster"
 
 count = 0
@@ -31,7 +54,8 @@ while (count < ntests):
     i = 0
     while (i < nstudents):
         progress(done, todo)
-        subprocess.Popen ([cmd, '-d', filename, '-a', str(i), 'class']).wait()
+        subprocess.Popen ([cmd, '-d', filename, '-a', str(i), 'class'])\
+                .wait()
         i += 1
         done += 1
 
@@ -86,3 +110,4 @@ for val in calls:
         outliers.append(val)
 
 print ("Outliers found:", len(outliers))
+

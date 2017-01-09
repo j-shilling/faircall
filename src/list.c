@@ -166,11 +166,15 @@ call_student (list_node_t *node, const unsigned int last_called, student_t **ret
 		min = 0;
 	}
 
-	time_t t;
-	srand(time(&t));
+	FILE *f = fopen ("/dev/urandom", "r");
 
-	int r = (int)((double)rand() / ((double)RAND_MAX + 1) * (max - min + 1));
+	unsigned char byte = 0;
+	fread (&byte, sizeof(byte), 1, f);
+
+	int r = (int)((int) byte / 256 * (max -min + 1));
 	unsigned int index = r + min;
+
+
 
 	/*
 	 * Place new student in ret
