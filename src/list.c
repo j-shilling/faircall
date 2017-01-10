@@ -1,10 +1,26 @@
+/*
+ *    This file is part of faircall.
+ *
+ *    Foobar is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    Foobar is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
 
-#include "index.h"
 #include "list.h"
 
 list_node_t *new_list_node(student_t *item) {
@@ -149,25 +165,10 @@ unsigned int get_max_index(list_node_t *node) {
 
 }
 
-unsigned int
-call_student (list_node_t *node, const unsigned int last_called, student_t **ret)
+
+static inline int
+get_rand_int (int min, int max)
 {
-	/*
-	 * Get an index that will not return the same student as
-	 * last_called
-	 */
-	unsigned int min = get_min (node, last_called);
-	unsigned int max = get_max (node, last_called);
-	unsigned int max_index = get_max_index (node);
-
-	if ((max_index - max) > min) {
-		min = max == max_index ? min = max : max + 1;
-		max = max_index;
-	} else {
-		max = min == 0 ? min : min - 1;
-		min = 0;
-	}
-
 	double val = 0;
 	FILE *f = fopen ("/dev/urandom", "r");
 
@@ -187,9 +188,64 @@ call_student (list_node_t *node, const unsigned int last_called, student_t **ret
 	}
 
 	int r = (int)(val * (max - min + 1));
-	unsigned int index = r + min;
+	return r + min;
+}
 
+static inline int
+get_rand_min(list_node_t *node, const unsigned int last_called)
+{
+	unsigned int min = get_min (node, last_called);
+	unsigned int max = get_max (node, last_called);
+	unsigned int max_index = get_max_index (node);
 
+	if ((max_index - max) > min) {
+		min = max == max_index ? min = max : max + 1;
+	} else {
+		min = 0;
+	}
+
+	return min;
+}
+
+static inline int
+get_rand_max(list_node_t *node, const unsigned int last_called)
+{
+	unsigned int min = get_min (node, last_called);
+	unsigned int max = get_max (node, last_called);
+	unsigned int max_index = get_max_index (node);
+
+	if ((max_index - max) > min) {
+		max = max_index;
+	} else {
+		max = min == 0 ? min : min - 1;
+	}
+
+	return max;
+}
+
+double
+get_odds (list_node_t *list, student_t *student, const unsigned int last_called)
+{
+	int min = get_rand_min (list, last_called);
+	int max = get_rand_max (list, last_called);
+	
+	if ((min > student->max_index) || (max < student->max_index))
+		return 0.0;
+
+	int chances = get_max(list, student->max_index) - get_min (list, student->max_index) + 1;
+
+	return ((double) chances / (double) (max - min + 1));
+}
+
+unsigned int
+call_student (list_node_t *node, const unsigned int last_called, student_t **ret)
+{
+	/*
+	 * Get an index that will not return the same student as
+	 * last_called
+	 */
+	unsigned int index = get_rand_int (get_rand_min(node, last_called),
+			get_rand_max(node, last_called));
 
 	/*
 	 * Place new student in ret

@@ -65,7 +65,9 @@ START_TEST(test_get)
 	two->max_index = 5;
 	three->max_index = 10;
 
-	student_t *result = get(list, 0);
+	student_t *result = NULL;
+
+	result = get(list, 0);
 	ck_assert (result);
 	ck_assert_str_eq (result->name, one->name);
 
@@ -249,7 +251,7 @@ END_TEST
 START_TEST (test_call_student_fair)
 {
 	const unsigned int nstudents = 25;
-	const unsigned int ntests = 100;
+	const unsigned int ntests = 1000;
 
 	/*
 	 * Build List of with nstudents

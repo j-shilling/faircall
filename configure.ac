@@ -14,15 +14,11 @@ PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
 # Checks for programs.
 AC_PROG_CC
 
-AX_CHECK_COMPILE_FLAG([-std=gnu11], [
-	CFLAGS+=" -std=gnu11"
+AX_CHECK_COMPILE_FLAG([-std=c11], [
+	CFLAGS+=" -std=c11"
 ], [
-	AX_CHECK_COMPILE_FLAG([-std=c11], [
-		CFLAGS+=" -std=c11"
-	], [
-		echo "C compiler cannot compile C11 code"
-		exit -1
-	])
+	echo "C compiler cannot compile C11 code"
+	exit -1
 ])
 
 # Checks for libraries.
