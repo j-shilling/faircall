@@ -15,33 +15,9 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIST_H__
-#define __LIST_H__
+#ifndef __RANDOM_H__
+#define __RANDOM_H__
 
-#include <stdbool.h>
+extern int get_rand_int (int min, int max);
 
-#include "student.h"
-
-typedef struct _list_node_t
-{
-  student_t *item;
-  struct _list_node_t *next;
-} list_node_t;
-
-extern list_node_t *
-new_list_node (student_t *item);
-extern void
-free_list_node (list_node_t *node);
-
-extern void
-add (list_node_t *node, student_t *student);
-extern student_t *
-get (list_node_t *node, const unsigned int index);
-
-extern unsigned int
-call_student (list_node_t *node, const unsigned int last_called, student_t **ret);
-
-extern double
-get_odds (list_node_t *list, student_t *student, const unsigned int last_called);
-
-#endif
+#endif /* __RANDOM_H__ */

@@ -1,6 +1,3 @@
-#                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
-
 AC_PREREQ([2.69])
 AC_INIT([faircall], [1.0], [shilling.jake@gmail.com])
 AM_INIT_AUTOMAKE([-Wall -Werror subdir-objects])

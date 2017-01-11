@@ -1,18 +1,18 @@
 /*
  *    This file is part of faircall.
  *
- *    Foobar is free software: you can redistribute it and/or modify
+ *    faircall is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation, either version 3 of the License, or
  *    (at your option) any later version.
  *
- *    Foobar is distributed in the hope that it will be useful,
+ *    faircall is distributed in the hope that it will be useful,
  *    but WITHOUT ANY WARRANTY; without even the implied warranty of
  *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+ *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 /************************************************************************
@@ -125,7 +125,6 @@ strdup (const char *str)
  ************************************************************************/
 extern int errno;
 
-extern int opterr;
 extern int optind;
 extern char *optarg;
 
@@ -477,9 +476,11 @@ add_student (char * name, char *class)
   free_student (student);
   xmlSaveFormatFile (get_doc_name(), doc, 0);
   xmlFreeDoc (doc);
+
+  return EXIT_SUCCESS;
 }
 
-static _Noreturn void
+static void
 on_kill (int sig)
 {
   /*
