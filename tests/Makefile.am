@@ -8,6 +8,7 @@ check_list_SOURCES = check_list.c \
 		     		$(top_builddir)/src/random.c
 check_random_SOURCES = check_random.c \
 					stats.c \
+					stats.h \
 					$(top_builddir)/src/random.c
 
 check_student_CFLAGS = @CHECK_CFLAGS@

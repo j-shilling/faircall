@@ -121,7 +121,7 @@ strdup (const char *str)
   while (0)
 
 /************************************************************************
- * EXTERNAL VARIABLES
+ * EXTERNAL VARIABLES                                                   *
  ************************************************************************/
 extern int errno;
 
@@ -129,7 +129,7 @@ extern int optind;
 extern char *optarg;
 
 /************************************************************************
- * STATIC FUNCTIONS
+ * STATIC FUNCTIONS                                                     *
  ************************************************************************/
 // create a new student in doc
 static int add_student (char * name, char * class);
