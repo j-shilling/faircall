@@ -75,7 +75,7 @@ asprintf (char ** restrict __ptr,
 
 #endif /* HAVE_ASPRINTF */
 
-#ifndef  HAVE_STRDUP
+#ifdef  HAVE_STRDUP
 
 extern char *strdup (const char *str);
 
@@ -97,7 +97,7 @@ strdup (const char *str)
 /************************************************************************
  * MACROS FOR STRING CONSTANTS                                          *
  ************************************************************************/
-#define ARGSTR    "?1ma:f:i:d:"
+#define ARGSTR    "?1mxa:f:i:d:"
 
 #define DOCNAME   "roster"
 

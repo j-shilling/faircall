@@ -29,7 +29,7 @@
 #include "random.h"
 
 /************************************************************************
- * STATIC FUNCTIONS
+ * STATIC FUNCTIONS                                                     *
  ************************************************************************/
 
 static unsigned int
@@ -167,7 +167,6 @@ free_list_node (list_node_t *node)
 void
 add (list_node_t *node, student_t *student)
 {
-
   if (!node)
     {
       return;

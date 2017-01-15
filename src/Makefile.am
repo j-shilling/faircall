@@ -1,4 +1,4 @@
-bin_PROGRAMS = faircall
+bin_PROGRAMS = faircall gfaircall
 faircall_SOURCES = main.c \
 		 student.c \
 		 student.h \
@@ -6,5 +6,14 @@ faircall_SOURCES = main.c \
 		 random.c \
 		 list.c \
 		 list.h
-faircall_CFLAGS = $(XML_CFLAGS)
-faircall_LDADD= $(XML_LIBS) -lm
+faircall_CFLAGS = $(XML_CFLAGS) $(GTK_CFLAGS)
+faircall_LDADD= $(XML_LIBS) $(GTK_LIBS) -lm
+gfaircall_SOURCES = gmain.c \
+		 student.c \
+		 student.h \
+		 random.h \
+		 random.c \
+		 list.c \
+		 list.h
+gfaircall_CFLAGS = $(XML_CFLAGS) $(GTK_CFLAGS)
+gfaircall_LDADD= $(XML_LIBS) $(GTK_LIBS) -lm

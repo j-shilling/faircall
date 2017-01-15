@@ -17,4 +17,4 @@ check_random_CFLAGS = @CHECK_CFLAGS@
 
 check_student_LDADD = @CHECK_LIBS@
 check_list_LDADD = @CHECK_LIBS@
-check_random_LDADD = @CHECK_LIBS@
+check_random_LDADD = @CHECK_LIBS@ -lm
