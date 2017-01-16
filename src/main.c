@@ -101,6 +101,7 @@ strdup (const char *str)
 
 #define DOCNAME   "roster"
 
+#define CLASS		"class"
 #define TYPE      "student"
 #define NAME      "name"
 #define CALLED    "called"
@@ -432,7 +433,8 @@ add_student (char * name, char *class)
 
   if (class_node == NULL)
     {
-      class_node = xmlNewChild (get_root (doc), NULL, class, NULL);
+      class_node = xmlNewChild (get_root (doc), NULL, CLASS, NULL);
+      xmlNewProp (class_node, NAME, class);
       xmlNewProp (class_node, CALLED, "0");
     }
 
@@ -558,8 +560,9 @@ get_class (xmlDocPtr doc)
 
   while (cur != NULL)
     {
-      if (!xmlStrcmp (cur->name, class))
-        return cur;
+      if (!xmlStrcmp (cur->name, CLASS))
+	if (!xmlStrcmp (class, xmlGetProp(cur, NAME)))
+	  return cur;
 
       cur = cur->next;
     }
