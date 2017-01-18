@@ -20,85 +20,128 @@
 #include <check.h>
 
 #include "../src/list.h"
-#include "../src/student.h"
+#include "../src/list-priv.h"
 
-START_TEST (test_new_list_node)
+START_TEST (test_list_new)
     {
-      list_node_t *list = new_list_node (NULL);
+      list_t *list = list_new (NULL);
       ck_assert(list == NULL);
 
-      student_t *item = new_student ("one");
-      list = new_list_node (item);
+      list = list_new ("class1");
+      ck_assert(list != NULL);
+      ck_assert(list->first_node == NULL);
+      ck_assert(list->max_index == 0);
+      ck_assert(list->last_called == 0);
 
-      ck_assert(list);
-      ck_assert(list->item == item);
-      ck_assert(list->next == NULL);
-
-      free_list_node (list);
+      list_free (list);
     }END_TEST
 
-START_TEST (test_add)
+START_TEST (test_list_add)
     {
-      student_t *one = new_student ("one");
-      student_t *two = new_student ("two");
-      student_t *three = new_student ("three");
+      list_t *list = list_new ("class1");
 
-      list_node_t *list = new_list_node (one);
+      list_add (list, "one", 1, 3);
+      list_add (list, "two", 3, 2);
+      list_add (list, "three", 2, 4);
+      list_add (list, "four", 3, 3);
+      list_add (list, "five", 2, 1);
 
-      add (list, two);
-      add (list, three);
+      list_node_t *cur = list->first_node;
 
-      ck_assert(list->item);
-      ck_assert_str_eq(list->item->name, one->name);
+      ck_assert(cur != NULL);
+      ck_assert(strcmp (cur->item->name, "one") == 0);
+      ck_assert(cur->item->called == 1);
+      ck_assert(cur->item->slots == 3);
+      ck_assert(cur->prev == NULL);
+      ck_assert(cur->max_index == 3);
 
-      ck_assert(list->next->item);
-      ck_assert_str_eq(list->next->item->name, two->name);
+      cur = cur->next;
 
-      ck_assert(list->next->next->item);
-      ck_assert_str_eq(list->next->next->item->name, three->name);
+      ck_assert(cur != NULL);
+      ck_assert(strcmp (cur->item->name, "two") == 0);
+      ck_assert(cur->item->called == 3);
+      ck_assert(cur->item->slots == 2);
+      ck_assert(cur->prev != NULL);
+      ck_assert(cur->max_index == 5);
 
-      ck_assert(list->item->max_index == 0);
-      ck_assert(list->next->item->max_index == 1);
-      ck_assert(list->next->next->item->max_index == 2);
-      free_list_node (list);
+      cur = cur->next;
+
+      ck_assert(cur != NULL);
+      ck_assert(strcmp (cur->item->name, "three") == 0);
+      ck_assert(cur->item->called == 2);
+      ck_assert(cur->item->slots == 4);
+      ck_assert(cur->prev != NULL);
+      ck_assert(cur->max_index == 10);
+
+      cur = cur->next;
+
+      ck_assert(cur != NULL);
+      ck_assert(strcmp (cur->item->name, "four") == 0);
+      ck_assert(cur->item->called == 3);
+      ck_assert(cur->item->slots == 3);
+      ck_assert(cur->prev != NULL);
+      ck_assert(cur->max_index == 13);
+
+      cur = cur->next;
+
+      ck_assert(cur != NULL);
+      ck_assert(strcmp (cur->item->name, "five") == 0);
+      ck_assert(cur->item->called == 2);
+      ck_assert(cur->item->slots == 1);
+      ck_assert(cur->prev != NULL);
+      ck_assert(cur->max_index == 14);
+
+      ck_assert(cur->next == NULL);
     }END_TEST
 
-START_TEST(test_get)
+START_TEST(test_get_name)
     {
-      student_t *one = new_student ("one");
-      student_t *two = new_student ("two");
-      student_t *three = new_student ("three");
+      list_t *list = list_new ("class1");
 
-      list_node_t *list = new_list_node (one);
+      list_add (list, "one", 1, 3);
+      list_add (list, "two", 3, 2);
+      list_add (list, "three", 2, 4);
+      list_add (list, "four", 3, 3);
+      list_add (list, "five", 2, 1);
 
-      add (list, two);
-      add (list, three);
+      ck_assert(0 == strcmp ("one", list_get_name (list, 0)));
+      ck_assert(0 == strcmp ("one", list_get_name (list, 1)));
+      ck_assert(0 == strcmp ("one", list_get_name (list, 2)));
+      ck_assert(0 == strcmp ("two", list_get_name (list, 3)));
+      ck_assert(0 == strcmp ("two", list_get_name (list, 4)));
+      ck_assert(0 == strcmp ("three", list_get_name (list, 5)));
+      ck_assert(0 == strcmp ("three", list_get_name (list, 6)));
+      ck_assert(0 == strcmp ("three", list_get_name (list, 7)));
+      ck_assert(0 == strcmp ("three", list_get_name (list, 8)));
+      ck_assert(0 == strcmp ("four", list_get_name (list, 9)));
+      ck_assert(0 == strcmp ("four", list_get_name (list, 10)));
+      ck_assert(0 == strcmp ("four", list_get_name (list, 11)));
+      ck_assert(0 == strcmp ("five", list_get_name (list, 12)));
+      ck_assert(list_get_name(list, 112) == NULL);
 
-      one->max_index = 1;
-      two->max_index = 5;
-      three->max_index = 10;
-
-      student_t *result = NULL;
-
-      result = get (list, 0);
-      ck_assert(result);
-      ck_assert_str_eq(result->name, one->name);
-
-      result = get (list, 3);
-      ck_assert(result);
-      ck_assert_str_eq(result->name, two->name);
-
-      result = get (list, 8);
-      ck_assert(result);
-      ck_assert_str_eq(result->name, three->name);
-
-      result = get (list, 10000);
-      ck_assert(result == NULL);
-
-      free_list_node (list);
+      list_free (list);
     }END_TEST
 
-START_TEST (test_call_student)
+START_TEST(test_get_times_called_on)
+    {
+      list_t *list = list_new ("class1");
+
+      list_add (list, "one", 1, 3);
+      list_add (list, "two", 3, 2);
+      list_add (list, "three", 2, 4);
+      list_add (list, "four", 3, 3);
+      list_add (list, "five", 2, 1);
+
+      ck_assert_int_eq(1, list_get_times_called_on (list, 0));
+      ck_assert_int_eq(3, list_get_times_called_on (list, 3));
+      ck_assert_int_eq(2, list_get_times_called_on (list, 5));
+      ck_assert_int_eq(3, list_get_times_called_on (list, 9));
+      ck_assert_int_eq(2, list_get_times_called_on (list, 12));
+
+      list_free (list);
+    }END_TEST
+
+START_TEST (test_call_next)
     {
       const unsigned int nstudents = 25;
       const unsigned int ntests = 1000;
@@ -106,7 +149,7 @@ START_TEST (test_call_student)
       /*
        * Build List of with nstudents
        */
-      list_node_t *list = NULL;
+      list_node_t *list = list_new ("class1");
 
       for (int i = 0; i < nstudents; i++)
 	{
@@ -114,29 +157,24 @@ START_TEST (test_call_student)
 	  sprintf (name, "%i", i);
 	  student_t *student = new_student (name);
 
-	  if (list)
-	    add (list, student);
-	  else
-	    list = new_list_node (student);
+	  list_add (list, name, 0, 1);
 	}
 
       /*
        * Run test ntests times
        */
-      unsigned int index = 0;
-      student_t *last = NULL;
-      student_t *cur = NULL;
+      char *last = NULL;
+      char *this = NULL;
 
       for (int i = 0; i < ntests; i++)
 	{
-	  last = cur;
-	  index = call_student (list, index, &cur);
-	  ck_assert(cur);
+	  last = this;
+	  this = list_call_next (list);
 
 	  if (last)
-	    ck_assert_msg(strcmp (cur->name, last->name) != 0,
+	    ck_assert_msg(strcmp (last, this) != 0,
 			  "Called student %s is the same as last student %s",
-			  cur->name, last->name);
+			  this, last);
 	}
     }END_TEST
 
@@ -152,10 +190,11 @@ main (void)
   s = suite_create ("List");
   tc_core = tcase_create ("Core");
 
-  tcase_add_test(tc_core, test_new_list_node);
-  tcase_add_test(tc_core, test_add);
-  tcase_add_test(tc_core, test_get);
-  tcase_add_test(tc_core, test_call_student);
+  tcase_add_test(tc_core, test_list_new);
+  tcase_add_test(tc_core, test_list_add);
+  tcase_add_test(tc_core, test_get_name);
+  tcase_add_test(tc_core, test_get_times_called_on);
+  tcase_add_test(tc_core, test_call_next);
   suite_add_tcase (s, tc_core);
 
   sr = srunner_create (s);

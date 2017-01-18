@@ -19,16 +19,19 @@
 #define __IO_H__
 
 #include "class.h"
+#include "list.h"
 
 typedef enum {
   ASPRINTF_FAILED = -1,
   MKDIR_FAILED = -2,
   ACCESS_FAILED = -3,
   PARSE_FAILED = -4,
-  ROOT_FAILED = -5
+  ROOT_FAILED = -5,
+  NOSUCHCLASS = -6
 } io_err;
 
 extern void set_file (char *name);
 extern class_t **get_class_list ();
+extern list_t *get_student_list (char *class);
 
 #endif /* __IO_H__ */

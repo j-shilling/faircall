@@ -18,7 +18,6 @@
 #ifndef __CLASS_H__
 #define __CLASS_H__
 
-extern struct _class_s;
 typedef struct _class_s class_t;
 
 extern class_t *new_class (char * name, unsigned int size, char * last_called, unsigned int last_index);
@@ -28,5 +27,7 @@ extern char *class_get_name(class_t *class);
 extern unsigned int class_get_size(class_t *class);
 extern char *class_get_last_called(class_t *class);
 extern unsigned int class_get_last_index (class_t *class);
+
+extern void class_set_last_index (class_t *class, unsigned int index);
 
 #endif /* __CLASS_H__ */

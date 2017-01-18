@@ -24,83 +24,265 @@
 #include <string.h>
 #include <errno.h>
 #include <limits.h>
+#include <assert.h>
 
 #include "list.h"
+#include "list-priv.h"
 #include "random.h"
+#include "asprintf.h"
 
 /************************************************************************
- * STATIC FUNCTIONS                                                     *
+ * STATIC FUNCTIONS DECLARATIONS                                        *
  ************************************************************************/
 
+static void
+list_node_free (list_node_t *node);
+
+static void
+list_set_indexes (list_t *list);
+
+static list_node_t *
+list_get_node (list_t *list, unsigned int index);
+
+static list_item_t *
+list_get_item (list_t *list, unsigned int index);
+
 static unsigned int
-get_min (list_node_t *node, const unsigned int index)
+get_rand_min (list_t *list);
+
+static unsigned int
+get_rand_max (list_t *list);
+
+/************************************************************************
+ * CONSTRUCTOR AND DESTRUCTOR                                           *
+ ************************************************************************/
+
+list_t *
+list_new (char *class_name)
 {
+  if (!class_name)
+    return NULL;
 
-  unsigned int min = 0;
-  unsigned int max = 0;
+  list_t *ret = (list_t *) malloc (sizeof (list_t *));
 
-  while (node)
-    {
+  ret->first_node = NULL;
+  ret->max_index = 0;
+  ret->last_called = 0;
 
-      max = node->item->max_index;
+  ret->class_name = strdup (class_name);
 
-      if ((index >= min) && (index <= max))
-	return min;
-
-      node = node->next;
-      min = max + 1;
-    }
-
-  return 0;
+  return ret;
 }
 
-static unsigned int
-get_max (list_node_t *node, const unsigned int index)
+void
+list_free (list_t *list)
 {
-
-  unsigned int min = 0;
-  unsigned int max = 0;
-
-  while (node)
+  if (list)
     {
+      if (list->first_node)
+	list_node_free (list->first_node);
 
-      max = node->item->max_index;
+     // if (list->class_name)
+	//free (list->class_name);
 
-      if ((index >= min) && (index <= max))
-	return max;
+      free (list);
+    }
+}
 
-      node = node->next;
-      min = max + 1;
+/************************************************************************
+ * LIST ACCESS FUNCTIONS                                                *
+ ************************************************************************/
 
+void
+list_add (list_t *list, char *name, unsigned int called, unsigned int slots)
+{
+  assert (list);
+
+  list_item_t *item = (list_item_t *) malloc (sizeof (list_item_t));
+  item->name = strdup (name);
+  item->called = called;
+  item->slots = slots;
+
+  list_node_t *node = (list_node_t *) malloc (sizeof (list_node_t *));
+  node->item = item;
+  node->next = NULL;
+
+  if (list->first_node)
+    {
+      list_node_t *cur = list->first_node;
+
+      while (cur->next)
+	cur = cur->next;
+
+      cur->next = node;
+      node->prev = cur;
+    }
+  else
+    {
+      list->first_node = node;
+      node->max_index = item->slots;
     }
 
-  return 0;
+  list_set_indexes (list);
+}
+
+
+char *
+list_get_name (list_t *list, unsigned int index)
+{
+  char *ret = NULL;
+
+  list_item_t *item = list_get_item (list, index);
+
+  if (item)
+    ret = item->name;
+
+  return ret;
 }
 
 unsigned int
-get_max_index (list_node_t *node)
+list_get_times_called_on (list_t * list, unsigned int index)
 {
-  if (!node)
-    {
-      fprintf (stderr, "ERROR: cannot get the max index of a null list!\n");
-      exit (EXIT_FAILURE);
-    }
+  list_item_t *item = list_get_item (list, index);
 
-  while (node->next)
-    {
-      node = node->next;
-    }
+  if (item)
+    return item->called;
 
-  return node->item->max_index;
-
+  return 0;
 }
 
-static unsigned int
-get_rand_min (list_node_t *node, const unsigned int last_called)
+double
+list_get_odds (list_t *list, unsigned int index)
 {
-  unsigned int min = get_min (node, last_called);
-  unsigned int max = get_max (node, last_called);
-  unsigned int max_index = get_max_index (node);
+  int min = get_rand_min (list);
+    int max = get_rand_max (list);
+
+    list_node_t *node = list_get_node (list, index);
+
+    if ((min > node->max_index) || (max < node->max_index))
+      return 0.0;
+
+    return ((double) node->item->slots / (double) (max - min + 1));
+}
+
+char *
+list_call_next (list_t *list)
+{
+  /*
+     * Get an index that will not return the same student as
+     * last_called
+     */
+    unsigned int index = get_rand_int (
+	get_rand_min (list), get_rand_max (list));
+
+    /*
+     * Get selection
+     */
+    list_item_t *item = list_get_item (list, index);
+    list->last_called = index;
+
+    /*
+     * Update the list by making whoever was called on
+     * less likely to get picked and who ever wasn't more
+     * likely.
+     */
+    if (item->slots > 1) item->slots++;
+
+    list_node_t *node = list->first_node;
+    while (node)
+      {
+	if (node->item != item)
+	  node->item->slots++;
+      }
+
+    list_set_indexes (list);
+
+    /*
+     * Return selected name
+     */
+    return item->name;
+}
+
+/************************************************************************
+ * STATIC FUNCTIONS DEFINITIONS                                         *
+ ************************************************************************/
+
+static void
+list_node_free (list_node_t *node)
+{
+  if (node)
+    {
+      if (node->next)
+	list_node_free (node->next);
+
+      if (node->item)
+	{
+	  if (node->item->name)
+	    free (node->item->name);
+
+	  free (node->item);
+	}
+
+      free (node);
+    }
+}
+
+static void
+list_set_indexes (list_t *list)
+{
+  list_node_t *cur = list->first_node;
+
+  while (cur)
+    {
+      if (cur->prev)
+	cur->max_index = cur->prev->max_index + cur->item->slots;
+      else
+	cur->max_index = cur->item->slots;
+
+      cur = cur->next;
+    }
+}
+
+static list_node_t *
+list_get_node (list_t *list, unsigned int index)
+{
+  list_node_t *cur = list->first_node;
+
+    if (!cur)
+      return NULL;
+
+    while (cur->next)
+      {
+        if ((index <= cur->max_index) && (index > cur->prev->max_index))
+  	return cur;
+
+        cur = cur->next;
+      }
+
+    return NULL;
+}
+
+static list_item_t *
+list_get_item (list_t *list, unsigned int index)
+{
+  list_node_t *node = list_get_node(list, index);
+
+  if (node)
+    return node->item;
+
+  return NULL;
+}
+
+
+static unsigned int
+get_rand_min (list_t *list)
+{
+  list_node_t *node = list_get_node (list, list->last_called);
+
+  unsigned int min = node->prev ?
+      node->prev->max_index + 1 : 0;
+  unsigned int max = node->max_index;
+  unsigned int max_index = list->max_index;
 
   if ((max_index - max) > min)
     {
@@ -115,169 +297,25 @@ get_rand_min (list_node_t *node, const unsigned int last_called)
 }
 
 static unsigned int
-get_rand_max (list_node_t *node, const unsigned int last_called)
+get_rand_max (list_t *list)
 {
-  unsigned int min = get_min (node, last_called);
-  unsigned int max = get_max (node, last_called);
-  unsigned int max_index = get_max_index (node);
+  list_node_t *node = list_get_node (list, list->last_called);
+
+  unsigned int min = node->prev ?
+      node->prev->max_index + 1 : 0;
+  unsigned int max = node->max_index;
+  unsigned int max_index = list->max_index;
 
   if ((max_index - max) > min)
     {
-      max = max_index;
+      min = max == max_index ? min = max : max + 1;
     }
   else
     {
-      max = min == 0 ? min : min - 1;
+      min = 0;
     }
 
   return max;
 }
 
-/************************************************************************
- * GLOBAL FUNCTIONS
- ************************************************************************/
 
-list_node_t *
-new_list_node (student_t *item)
-{
-  if (!item)
-    return NULL;
-
-  list_node_t *ret = (list_node_t *) malloc (sizeof(list_node_t));
-
-  ret->item = item;
-  ret->next = NULL;
-
-  return ret;
-}
-
-void
-free_list_node (list_node_t *node)
-{
-  if (node)
-    {
-      if (node->next)
-	free_list_node (node->next);
-
-      free_student (node->item);
-      free (node);
-    }
-}
-
-void
-add (list_node_t *node, student_t *student)
-{
-  if (!node)
-    {
-      return;
-    }
-
-  unsigned int index = 1;
-
-  while (node->next)
-    {
-
-      index++;
-      node = node->next;
-    }
-
-  node->next = new_list_node (student);
-  node->next->item->max_index = index;
-}
-
-student_t *
-get (list_node_t *node, const unsigned int index)
-{
-
-  unsigned int min = 0;
-  unsigned int max = 0;
-
-  while (node)
-    {
-
-      max = node->item->max_index;
-
-      if ((index >= min) && (index <= max))
-	return node->item;
-
-      node = node->next;
-      min = max + 1;
-    }
-
-  return NULL;
-}
-
-double
-get_odds (list_node_t *list, student_t *student, const unsigned int last_called)
-{
-  int min = get_rand_min (list, last_called);
-  int max = get_rand_max (list, last_called);
-
-  if ((min > student->max_index) || (max < student->max_index))
-    return 0.0;
-
-  int chances = get_max (list, student->max_index)
-      - get_min (list, student->max_index) + 1;
-
-  return ((double) chances / (double) (max - min + 1));
-}
-
-unsigned int
-call_student (list_node_t *node, const unsigned int last_called,
-	      student_t **ret)
-{
-  /*
-   * Get an index that will not return the same student as
-   * last_called
-   */
-  unsigned int index = get_rand_int (get_rand_min (node, last_called),
-				     get_rand_max (node, last_called));
-
-  /*
-   * Place new student in ret
-   */
-  (*ret) = get (node, index);
-  (*ret)->times_called_on++;
-
-  /*
-   * Update the list by making whoever was called on
-   * less likely to get picked and who ever wasn't more
-   * likely.
-   */
-  {
-    unsigned int min = 0;
-    unsigned int max = 0;
-    unsigned int new_min = 0;
-    unsigned int range = 0;
-
-    while (node)
-      {
-
-        max = node->item->max_index;
-        range = max - min;
-
-        if ((index >= min) && (index <= max))
-  	{
-  	  if (range > 0)
-  	    {
-  	      range--;
-  	    }
-  	}
-        else
-  	{
-  	  range++;
-  	}
-
-        node->item->max_index = new_min + range;
-        new_min = node->item->max_index + 1;
-
-        min = max + 1;
-        node = node->next;
-      }
-  }
-
-  /*
-   * Return an index that will return the new student
-   */
-  return (*ret)->max_index;
-}

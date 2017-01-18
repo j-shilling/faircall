@@ -132,7 +132,7 @@ extern char *optarg;
 /************************************************************************
  * STATIC FUNCTIONS                                                     *
  ************************************************************************/
-// create a new student in doc
+/*/ create a new student in doc
 static int add_student (char * name, char * class);
 // save new data to doc
 static void on_kill (int sig);
@@ -149,15 +149,15 @@ static void print_stats (student_t *cur);
 // get path to doc
 static char *get_doc_name ();
 // read the doc and build list
-static list_node_t *get_list();
+static list_t *get_list();
 // show usage instructions
-static void usage();
+static void usage();*/
 
 /************************************************************************
  * GLOBAL VARIABLES                                                     *
  ************************************************************************/
 char *file = NULL;
-list_node_t *list = NULL;
+list_t *list = NULL;
 char *class = NULL;
 
 unsigned int last_index = 0;
@@ -171,12 +171,10 @@ int
 main (int argc, char** argv)
 {
 
-  bool run = true;
+ /* bool run = true;
   bool loop = true;
 
-  /*
-   * Get the class identifier
-   */
+
   int c;
   while ( (c = getopt (argc, argv, ARGSTR)) != -1 )
     {
@@ -205,18 +203,15 @@ main (int argc, char** argv)
       class = strdup(argv[optind]);
     }
 
-  // reset getopt
   optind = 0;
 
-  /*
-   * Parse cmd line options
-   */
+
   while ( (c = getopt(argc, argv, ARGSTR)) != -1 )
     {
       switch (c)
       {
       case 'f':
-        { /* Read input file and save it to XML file */
+        {
           NEEDS_CLASS_NAME;
 
           FILE *file = fopen(optarg, "r");
@@ -241,7 +236,7 @@ main (int argc, char** argv)
         continue;
 
       case 'a':
-        { /* Add a single name */
+        {
           NEEDS_CLASS_NAME;
 
           add_student (optarg, class);
@@ -251,7 +246,7 @@ main (int argc, char** argv)
         continue;
 
       case 'i':
-        { /* print student info */
+        {
           bool all = (class == NULL);
 
           if (all)
@@ -322,25 +317,19 @@ main (int argc, char** argv)
     }
   }
 
-  /*
-   * If no options given, go to the main prog loop
-   */
+
   if (run)
     {
       NEEDS_CLASS_NAME;
 
-    /*
-     * register termination handlers
-     */
+
 
       signal (SIGTERM, on_kill);
       signal (SIGINT, on_kill);
       signal (SIGQUIT, on_kill);
       signal (SIGHUP, on_kill);
 
-    /*
-     * Get class node
-     */
+
 
       xmlDocPtr doc = open_doc();
       xmlNodePtr class_node = get_class (doc);
@@ -351,9 +340,6 @@ main (int argc, char** argv)
           return EXIT_FAILURE;
         }
 
-    /*
-     * Get all students in class
-     */
 
       list = get_list();
 
@@ -363,9 +349,6 @@ main (int argc, char** argv)
           return EXIT_FAILURE;
         }
 
-    /*
-     * Main loop
-     */
 
       student_t *student = NULL;
       do
@@ -392,13 +375,15 @@ main (int argc, char** argv)
       on_kill(0);
     }
 
-  return EXIT_SUCCESS;
+  return EXIT_SUCCESS;*/
+
+  printf("Hello World\n");
 }
 
 /************************************************************************
  * OTHER FUNCTIONS                                                      *
  ************************************************************************/
-
+/*
 static int
 add_student (char * name, char *class)
 {
@@ -412,23 +397,22 @@ add_student (char * name, char *class)
     }
 
   xmlDocPtr doc = open_doc();
-
+*/
   /*
    * Create doc and root
    */
-
+/*
   if (doc == NULL)
     {
-    /* create doc */
       doc = xmlNewDoc (BAD_CAST "1.0");
       xmlNodePtr root = xmlNewNode (NULL, BAD_CAST "root");  
       xmlDocSetRootElement (doc, root);
-    }
+    }/*
 
   /*
    * Find or create class
    */
-  
+ /*
   xmlNodePtr class_node = get_class(doc);
 
   if (class_node == NULL)
@@ -437,11 +421,11 @@ add_student (char * name, char *class)
       xmlNewProp (class_node, NAME, class);
       xmlNewProp (class_node, CALLED, "0");
     }
-
+*/
   /*
    * Check if student already exists in class
    */
-  xmlNodePtr cur = class_node->xmlChildrenNode;
+ /* xmlNodePtr cur = class_node->xmlChildrenNode;
   student_t *last = NULL;
 
   while (cur != NULL)
@@ -461,11 +445,11 @@ add_student (char * name, char *class)
 
         cur = cur->next;
     }
-
+*/
   /*
    * Add student to class
    */
-
+/*
   student_t *student = new_student (name);
   xmlNodePtr node = xmlNewChild (class_node, NULL, TYPE, NULL);
 
@@ -484,16 +468,16 @@ add_student (char * name, char *class)
 
 static void
 on_kill (int sig)
-{
+{/*
   /*
    * Update saved info
    */
-  xmlDocPtr doc = open_doc();
+/*  xmlDocPtr doc = open_doc();
   list_node_t *l = get_list();
 
   while (l != NULL)
     {
-      student_t *val = l->item;
+      student_t *val = list_get_item(l);
 
       xmlNodePtr class_node = get_class (doc);
 
@@ -520,7 +504,7 @@ on_kill (int sig)
           cur = cur->next;
         }
 
-        l = l->next;
+        l = list_get_item(l);
     }
 
   free_list_node (l);
@@ -649,7 +633,7 @@ get_doc_name ()
   return file;
 }
 
-static list_node_t *
+static list_t *
 get_list () {
   if (!list)
     {
@@ -689,4 +673,4 @@ static void
 usage()
 {
   printf ("%s [mode] [class]\n", PACKAGE);
-}
+}*/

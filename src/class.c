@@ -75,3 +75,10 @@ class_get_last_index (class_t *class)
 {
   return class->last_index;
 }
+
+void
+class_set_last_index (class_t * class, unsigned int index)
+{
+  class->last_index = index;
+}
+

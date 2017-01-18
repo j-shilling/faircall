@@ -22,26 +22,22 @@
 
 #include "student.h"
 
-typedef struct _list_node_t
-{
-  student_t *item;
-  struct _list_node_t *next;
-} list_node_t;
+typedef struct _list_t list_t;
 
-extern list_node_t *
-new_list_node (student_t *item);
-extern void
-free_list_node (list_node_t *node);
+list_t *
+list_new (char *class_name);
+void
+list_free (list_t *list);
 
-extern void
-add (list_node_t *node, student_t *student);
-extern student_t *
-get (list_node_t *node, const unsigned int index);
+void
+list_add (list_t *list, char *name, unsigned int called, unsigned int slots);
+char *
+list_get_name (list_t *list, unsigned int index);
+unsigned int
+list_get_times_called_on (list_t * list, unsigned int index);
+double
+list_get_odds (list_t *list, unsigned int index);
+char *
+list_call_next (list_t *list);
 
-extern unsigned int
-call_student (list_node_t *node, const unsigned int last_called, student_t **ret);
-
-extern double
-get_odds (list_node_t *list, student_t *student, const unsigned int last_called);
-
-#endif
+#endif /* __LIST_H__ */

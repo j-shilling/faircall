@@ -28,12 +28,14 @@
 #include "asprintf.h"
 #include "class.h"
 #include "student.h"
+#include "list.h"
 
 #define CLASS	"class"
 #define STUDENT "student"
 #define NAME    "name"
 #define CALLED  "called"
 #define INDEX   "index"
+#define SLOTS   "index"
 
 extern int errno;
 
@@ -118,8 +120,9 @@ get_class (xmlDocPtr doc, char *class)
 
   while (cur != NULL)
     {
-      if (!xmlStrcmp (cur->name, class))
-	return cur;
+      if (!xmlStrcmp (cur->name, CLASS))
+	if (!xmlStrcmp (class, xmlGetProp(cur, NAME)))
+	  return cur;
 
       cur = cur->next;
     }
@@ -210,6 +213,43 @@ get_class_list ()
     }
 
   ret[i] = NULL;
+
+  xmlFreeDoc (doc);
+
+  return ret;
+}
+
+list_t *
+get_student_list (char *class)
+{
+  list_t *ret = list_new (class);
+
+  xmlDocPtr doc = open_doc ();
+    if (!doc)
+      return NULL;
+
+  xmlNodePtr class_node = get_class (doc, class);
+
+  if (!class_node)
+    {
+      errno = NOSUCHCLASS;
+      return NULL;
+    }
+
+  xmlNodePtr cur = class_node->xmlChildrenNode;
+  while (cur != NULL)
+    {
+      if (!xmlStrcmp (cur->name, STUDENT))
+	{
+	  list_add (ret, xmlGetProp(cur, NAME),
+		    atoi (xmlGetProp(cur, CALLED)),
+		    atoi (xmlGetProp(cur, SLOTS)));
+	}
+
+      cur = cur->next;
+    }
+
+  xmlFreeDoc (doc);
 
   return ret;
 }
