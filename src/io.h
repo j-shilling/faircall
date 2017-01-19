@@ -18,7 +18,6 @@
 #ifndef __IO_H__
 #define __IO_H__
 
-#include "class.h"
 #include "list.h"
 
 typedef enum {

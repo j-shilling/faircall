@@ -31,8 +31,6 @@
 #include "io-priv.h"
 #include "asprintf.h"
 #include "strdup.h"
-#include "class.h"
-#include "student.h"
 #include "list.h"
 
 /************************************************************************
@@ -189,6 +187,8 @@ io_get_available_classes ()
 	    {
 	      if (!xmlStrcmp (cur->name, CLASS))
 		length++;
+
+	      cur = cur->next;
 	    }
 
 	  ret = (char **) malloc (sizeof(char *) * (length + 1));
@@ -351,110 +351,6 @@ get_class (xmlDocPtr doc, char *class)
     }
 
   return NULL;
-}
-
-static class_t *
-parse_class (xmlNodePtr node)
-{
-  char *name = xmlGetProp (node, NAME);
-  unsigned int index = atoi (xmlGetProp (node, CALLED));
-  unsigned int size = 0;
-  char *last = NULL;
-
-  xmlNodePtr cur = node->xmlChildrenNode;
-  while (cur != NULL)
-    {
-      if (!xmlStrcmp (cur->name, STUDENT))
-	{
-	  size++;
-	  unsigned int i = atoi (xmlGetProp (cur, INDEX));
-	  if (i == index)
-	    last = xmlGetProp (cur, NAME);
-
-	  cur = cur->next;
-	}
-    }
-
-  return new_class (name, size, last, index);
-}
-
-class_t **
-get_class_list ()
-{
-  xmlDocPtr doc = open_doc ();
-  if (!doc)
-    return NULL;
-
-  xmlNodePtr root = get_root (doc);
-  if (!root)
-    return NULL;
-
-  int i = 0;
-
-  xmlNodePtr cur = root->xmlChildrenNode;
-  while (cur != NULL)
-    {
-      if (!xmlStrcmp (cur->name, CLASS))
-	i++;
-
-      cur = cur->next;
-    }
-
-  class_t **ret = (class_t **) malloc (sizeof(class_t *) * (i + 1));
-  i = 0;
-
-  cur = root->xmlChildrenNode;
-  while (cur != NULL)
-    {
-      if (!xmlStrcmp (cur->name, CLASS))
-	{
-	  ret[i] = parse_class (cur);
-	  i++;
-	}
-
-      cur = cur->next;
-    }
-
-  ret[i] = NULL;
-
-  xmlFreeDoc (doc);
-
-  return ret;
-}
-
-List *
-get_student_list (char *class)
-{
-  List *ret = list_new (class);
-
-  xmlDocPtr doc = open_doc ();
-  if (!doc)
-    return NULL;
-
-  xmlNodePtr class_node = get_class (doc, class);
-
-  if (!class_node)
-    {
-      errno = NOSUCHCLASS;
-      return NULL;
-    }
-
-  xmlNodePtr cur = class_node->xmlChildrenNode;
-  while (cur != NULL)
-    {
-      if (!xmlStrcmp (cur->name, STUDENT))
-	{
-	  list_add (ret, xmlGetProp (cur, NAME),
-		    atoi (xmlGetProp (cur, CALLED)),
-		    atoi (xmlGetProp (cur, SLOTS)));
-	}
-
-      cur = cur->next;
-    }
-
-  xmlFreeDoc (doc);
-
-  return ret;
 }
 
 #ifdef __TEST_SAVE_LIST_ITEM

@@ -27,8 +27,12 @@
 #include "../config.h"
 
 #include "io.h"
-#include "class.h"
 #include "asprintf.h"
+
+  enum ListItemCols
+  {
+    NAME_COLUMN, CALLED_COLUMN, N_COLUMNS
+  };
 
 /************************************************************************
  * STATIC FUNCTION DECLARATIONS                                         *
@@ -41,7 +45,7 @@ open_dialog (gpointer callback_data, guint callback_action,
 	     GtkWidget *menu_item);
 
 static void
-show_list (GtkBox *content_area, List *list, class_t *class);
+show_list (GtkBox *content_area, List *list);
 
 static void
 about_dialog (gpointer callback_data, guint callback_action,
@@ -54,7 +58,12 @@ static void
 set_absent (GtkButton *button, gpointer func_data);
 
 static void
-open_class (class_t *class, GtkBox *content_area);
+open_class (char *class, GtkBox *content_area);
+
+static void
+append_item_to_store (char *name, unsigned int index, bool is_last_called,
+			unsigned int called, unsigned int slots,
+			void *data);
 
 /************************************************************************
  * GLOBAL VARIABLES       data                                              *
@@ -78,7 +87,7 @@ static GtkItemFactoryEntry menu_items[] =
 
 static gint nmenu_items = sizeof(menu_items) / sizeof(menu_items[0]);
 
-static class_t **classes;
+static char **classes;
 
 /************************************************************************
  * MAIN FUNCTION                                                        *
@@ -87,7 +96,7 @@ static class_t **classes;
 int
 main (int argc, char *argv[])
 {
-  classes = get_class_list ();
+  classes = io_get_available_classes ();
 
   GtkWidget *window;
   GtkWidget *main_vbox, *content_vbox;
@@ -163,13 +172,11 @@ open_dialog (gpointer callback_data, guint callback_action,
 
   enum
   {
-    CLASS_ID, NAME_COLUMN, SIZE_COLUMN, LAST_CALLED_COLUMN, N_COLUMNS
+    CLASS_ID, NAME_COLUMN, N_COLUMNS
   };
 
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
   G_TYPE_INT,
-					    G_TYPE_STRING,
-					    G_TYPE_INT,
 					    G_TYPE_STRING);
 
   GtkTreeIter iter;
@@ -179,9 +186,7 @@ open_dialog (gpointer callback_data, guint callback_action,
     {
       gtk_list_store_append (store, &iter);
       gtk_list_store_set (store, &iter, CLASS_ID, i, NAME_COLUMN,
-			  class_get_name (classes[i]), SIZE_COLUMN,
-			  class_get_size (classes[i]), LAST_CALLED_COLUMN,
-			  class_get_last_called (classes[i]), -1);
+			  classes[i], -1);
       i++;
     }
 
@@ -192,16 +197,6 @@ open_dialog (gpointer callback_data, guint callback_action,
   GtkTreeViewColumn *column = gtk_tree_view_column_new_with_attributes (
       "Class", renderer, "text", NAME_COLUMN,
       NULL);
-  gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
-
-  column = gtk_tree_view_column_new_with_attributes ("Size", renderer, "text",
-						     SIZE_COLUMN,
-						     NULL);
-  gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
-
-  column = gtk_tree_view_column_new_with_attributes ("Last Called", renderer,
-						     "text", LAST_CALLED_COLUMN,
-						     NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
 
   GtkTreeSelection *select = gtk_tree_view_get_selection (GTK_TREE_VIEW(tree));
@@ -270,7 +265,22 @@ about_dialog (gpointer callback_data, guint callback_action,
 }
 
 static void
-show_list (GtkBox *content_area, List *list, class_t *class)
+append_item_to_store (char *name, unsigned int index, bool is_last_called,
+			unsigned int called, unsigned int slots,
+			void *data)
+{
+  GtkListStore *store = GTK_LIST_STORE (data);
+  GtkTreeIter iter;
+
+       gtk_list_store_append (store, &iter);
+       gtk_list_store_set (store, &iter,
+			   NAME_COLUMN, name,
+			   CALLED_COLUMN, called,
+ 			  -1);
+}
+
+static void
+show_list (GtkBox *content_area, List *list)
 {
 
   /*
@@ -289,34 +299,13 @@ show_list (GtkBox *content_area, List *list, class_t *class)
    * Create a list of names
    */
 
-  enum
-  {
-    NAME_COLUMN, ODDS_COLUMN, N_COLUMNS
-  };
+
 
   GtkListStore *store = gtk_list_store_new (N_COLUMNS,
-  G_TYPE_STRING,
-					    G_TYPE_STRING);
+					    G_TYPE_STRING,
+					    G_TYPE_INT);
 
-  GtkTreeIter iter;
-/*  list_node_t *cur = list;
-
-  while (cur != NULL)
-    {
-
-      char *name = list_get_item(cur)->name;
-      char *odds = NULL;
-
-      double val = (get_odds (list, list_get_item(cur), class_get_last_index (class))
-	  * 100);
-
-      asprintf (&odds, "%3.1f%%", val);
-
-      gtk_list_store_append (store, &iter);
-      gtk_list_store_set (store, &iter, NAME_COLUMN, name, ODDS_COLUMN, odds,
-			  -1);
-      cur = list_get_next(cur);
-    }*/
+  list_for_each (list, append_item_to_store, store);
 
   GtkTreeModel *model = GTK_TREE_MODEL(store);
   GtkWidget *tree = gtk_tree_view_new_with_model (model);
@@ -327,8 +316,8 @@ show_list (GtkBox *content_area, List *list, class_t *class)
       NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
 
-  column = gtk_tree_view_column_new_with_attributes ("Odds", renderer, "text",
-						     ODDS_COLUMN,
+  column = gtk_tree_view_column_new_with_attributes ("Called", renderer, "text",
+						     CALLED_COLUMN,
 						     NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
 
@@ -337,7 +326,7 @@ show_list (GtkBox *content_area, List *list, class_t *class)
 }
 
 static void
-open_class (class_t *class, GtkBox *content_area)
+open_class (char *class, GtkBox *content_area)
 {
     {
       /*
@@ -352,7 +341,7 @@ open_class (class_t *class, GtkBox *content_area)
       g_list_free (children);
     }
 
-  List *list = get_student_list (class);
+  List *list = io_load_list (class);
 
   GtkWidget *select_area, *stats_area, *buttons_area;
   GtkWidget *list_area, *name_area;
@@ -360,7 +349,7 @@ open_class (class_t *class, GtkBox *content_area)
   select_area = gtk_hbox_new (FALSE, 0);
 
   list_area = gtk_vbox_new (FALSE, 0);
-  show_list (GTK_BOX(list_area), list, class);
+  show_list (GTK_BOX(list_area), list);
 
     {
       /*
@@ -369,7 +358,7 @@ open_class (class_t *class, GtkBox *content_area)
 
       name_area = gtk_vbox_new (FALSE, 0);
 
-      GtkWidget *label = gtk_label_new (class_get_last_called (class));
+      GtkWidget *label = gtk_label_new (list_get_name (list, list_get_last_called (list)));
 
       gtk_box_pack_start (GTK_BOX(name_area), label, TRUE, TRUE, 0);
 
@@ -377,11 +366,10 @@ open_class (class_t *class, GtkBox *content_area)
 
       GtkWidget *next = gtk_button_new_with_label ("Next");
 
-      gpointer *callback_data = (gpointer *) malloc (sizeof(gpointer) * 4);
-      callback_data[0] = (gpointer) class;
-      callback_data[1] = (gpointer) list;
-      callback_data[2] = (gpointer) label;
-      callback_data[3] = (gpointer) list_area;
+      gpointer *callback_data = (gpointer *) malloc (sizeof(gpointer) * 3);
+      callback_data[0] = (gpointer) list;
+      callback_data[1] = (gpointer) label;
+      callback_data[2] = (gpointer) list_area;
 
       gtk_signal_connect(GTK_OBJECT (next), "clicked",
 			 GTK_SIGNAL_FUNC (show_name), callback_data);
@@ -421,14 +409,14 @@ show_name (GtkButton *button, gpointer func_data)
 {
   gpointer *callback_data = (gpointer *) func_data;
 
-  class_t *class = (class_t *) callback_data[0];
-  List *list = (List *) callback_data[1];
-  GtkWidget *label = (GtkWidget *) callback_data[2];
-  GtkBox *list_area = (GtkBox *) callback_data[3];
+  List *list = (List *) callback_data[0];
+  GtkWidget *label = (GtkWidget *) callback_data[1];
+  GtkBox *list_area = (GtkBox *) callback_data[2];
 
   gtk_label_set_text (GTK_LABEL(label),
 		      list_call_next (list));
-  show_list (list_area, list, class);
+  io_save_list (list);
+  show_list (list_area, list);
 }
 
 static void

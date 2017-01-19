@@ -41,9 +41,6 @@ get_root (xmlDocPtr doc);
 static xmlNodePtr
 get_class (xmlDocPtr doc, char *class);
 
-static class_t *
-parse_class (xmlNodePtr node);
-
 static void save_item (char *name, unsigned int index, bool is_last_called,
 			unsigned int called, unsigned int slots,
 			void *data);

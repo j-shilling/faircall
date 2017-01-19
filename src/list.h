@@ -20,8 +20,6 @@
 
 #include <stdbool.h>
 
-#include "student.h"
-
 typedef struct _List List;
 typedef void (*process_list_item)
     (char *name, unsigned int index, bool is_last_called,

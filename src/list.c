@@ -183,6 +183,7 @@ list_call_next (List *list)
     list_set_indexes (list);
 
     list->last_called = item->max_index;
+    item->called ++;
 
     /*
      * Return selected name
