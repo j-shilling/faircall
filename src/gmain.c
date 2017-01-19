@@ -41,7 +41,7 @@ open_dialog (gpointer callback_data, guint callback_action,
 	     GtkWidget *menu_item);
 
 static void
-show_list (GtkBox *content_area, list_t *list, class_t *class);
+show_list (GtkBox *content_area, List *list, class_t *class);
 
 static void
 about_dialog (gpointer callback_data, guint callback_action,
@@ -270,7 +270,7 @@ about_dialog (gpointer callback_data, guint callback_action,
 }
 
 static void
-show_list (GtkBox *content_area, list_t *list, class_t *class)
+show_list (GtkBox *content_area, List *list, class_t *class)
 {
 
   /*
@@ -352,7 +352,7 @@ open_class (class_t *class, GtkBox *content_area)
       g_list_free (children);
     }
 
-  list_t *list = get_student_list (class);
+  List *list = get_student_list (class);
 
   GtkWidget *select_area, *stats_area, *buttons_area;
   GtkWidget *list_area, *name_area;
@@ -422,7 +422,7 @@ show_name (GtkButton *button, gpointer func_data)
   gpointer *callback_data = (gpointer *) func_data;
 
   class_t *class = (class_t *) callback_data[0];
-  list_t *list = (list_t *) callback_data[1];
+  List *list = (List *) callback_data[1];
   GtkWidget *label = (GtkWidget *) callback_data[2];
   GtkBox *list_area = (GtkBox *) callback_data[3];
 

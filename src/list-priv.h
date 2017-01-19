@@ -15,32 +15,33 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "list.h"
 
 /************************************************************************
  * STRUCT DEFINITIONS                                                   *
  ************************************************************************/
 
-typedef struct _list_item_t list_item_t;
-typedef struct _list_node_t list_node_t;
+typedef struct _ListItem ListItem;
+typedef struct _ListNode ListNode;
 
-struct _list_item_t
+struct _ListItem
 {
   char *name;
   unsigned int called;
   unsigned int slots;
 };
 
-struct _list_node_t
+struct _ListNode
 {
-  list_item_t *item;
+  ListItem *item;
   unsigned int max_index;
-  list_node_t *next;
-  list_node_t *prev;
+  ListNode *next;
+  ListNode *prev;
 };
 
-struct _list_t
+struct _List
 {
-  list_node_t *first_node;
+  ListNode *first_node;
   char *class_name;
   unsigned int max_index;
   unsigned int last_called;
@@ -51,19 +52,19 @@ struct _list_t
  ************************************************************************/
 
 static void
-list_node_free (list_node_t *node);
+list_node_free (ListNode *node);
 
 static void
-list_set_indexes (list_t *list);
+list_set_indexes (List *list);
 
-static list_node_t *
-list_get_node (list_t *list, unsigned int index);
+static ListNode *
+list_get_node (List *list, unsigned int index);
 
-static list_item_t *
-list_get_item (list_t *list, unsigned int index);
-
-static unsigned int
-get_rand_min (list_t *list);
+static ListItem *
+list_get_item (List *list, unsigned int index);
 
 static unsigned int
-get_rand_max (list_t *list);
+get_rand_min (List *list);
+
+static unsigned int
+get_rand_max (List *list);

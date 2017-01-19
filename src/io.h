@@ -32,6 +32,6 @@ typedef enum {
 
 extern void set_file (char *name);
 extern class_t **get_class_list ();
-extern list_t *get_student_list (char *class);
+extern List *get_student_list (char *class);
 
 #endif /* __IO_H__ */

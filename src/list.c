@@ -30,18 +30,19 @@
 #include "list-priv.h"
 #include "random.h"
 #include "asprintf.h"
+#include "strdup.h"
 
 /************************************************************************
  * CONSTRUCTOR AND DESTRUCTOR                                           *
  ************************************************************************/
 
-list_t *
+List *
 list_new (char *class_name)
 {
   if (!class_name)
     return NULL;
 
-  list_t *ret = (list_t *) malloc (sizeof (list_t *));
+  List *ret = (List *) malloc (sizeof (List *));
 
   ret->first_node = NULL;
   ret->max_index = 0;
@@ -53,7 +54,7 @@ list_new (char *class_name)
 }
 
 void
-list_free (list_t *list)
+list_free (List *list)
 {
   if (list)
     {
@@ -72,22 +73,22 @@ list_free (list_t *list)
  ************************************************************************/
 
 void
-list_add (list_t *list, char *name, unsigned int called, unsigned int slots)
+list_add (List *list, char *name, unsigned int called, unsigned int slots)
 {
   assert (list);
 
-  list_item_t *item = (list_item_t *) malloc (sizeof (list_item_t));
+  ListItem *item = (ListItem *) malloc (sizeof (ListItem));
   item->name = strdup (name);
   item->called = called;
   item->slots = slots;
 
-  list_node_t *node = (list_node_t *) malloc (sizeof (list_node_t));
+  ListNode *node = (ListNode *) malloc (sizeof (ListNode));
   node->item = item;
   node->next = NULL;
 
   if (list->first_node)
     {
-      list_node_t *cur = list->first_node;
+      ListNode *cur = list->first_node;
 
       while (cur->next)
 	cur = cur->next;
@@ -107,11 +108,11 @@ list_add (list_t *list, char *name, unsigned int called, unsigned int slots)
 
 
 char *
-list_get_name (list_t *list, unsigned int index)
+list_get_name (List *list, unsigned int index)
 {
   char *ret = NULL;
 
-  list_item_t *item = list_get_item (list, index);
+  ListItem *item = list_get_item (list, index);
 
   if (item)
     ret = item->name;
@@ -120,9 +121,9 @@ list_get_name (list_t *list, unsigned int index)
 }
 
 unsigned int
-list_get_times_called_on (list_t * list, unsigned int index)
+list_get_times_called_on (List * list, unsigned int index)
 {
-  list_item_t *item = list_get_item (list, index);
+  ListItem *item = list_get_item (list, index);
 
   if (item)
     return item->called;
@@ -131,12 +132,12 @@ list_get_times_called_on (list_t * list, unsigned int index)
 }
 
 double
-list_get_odds (list_t *list, unsigned int index)
+list_get_odds (List *list, unsigned int index)
 {
   int min = get_rand_min (list);
     int max = get_rand_max (list);
 
-    list_node_t *node = list_get_node (list, index);
+    ListNode *node = list_get_node (list, index);
 
     if ((min > node->max_index) || (max < node->max_index))
       return 0.0;
@@ -145,7 +146,7 @@ list_get_odds (list_t *list, unsigned int index)
 }
 
 char *
-list_call_next (list_t *list)
+list_call_next (List *list)
 {
   /*
      * Get an index that will not return the same student as
@@ -157,7 +158,7 @@ list_call_next (list_t *list)
     /*
      * Get selection
      */
-    list_item_t *item = list_get_item (list, index);
+    ListItem *item = list_get_item (list, index);
     list->last_called = index;
 
     /*
@@ -167,7 +168,7 @@ list_call_next (list_t *list)
      */
     if (item->slots > 1) item->slots--;
 
-    list_node_t *node = list->first_node;
+    ListNode *node = list->first_node;
     while (node)
       {
 	if (node->item != item)
@@ -189,7 +190,7 @@ list_call_next (list_t *list)
  ************************************************************************/
 
 static void
-list_node_free (list_node_t *node)
+list_node_free (ListNode *node)
 {
   if (node)
     {
@@ -209,9 +210,9 @@ list_node_free (list_node_t *node)
 }
 
 static void
-list_set_indexes (list_t *list)
+list_set_indexes (List *list)
 {
-  list_node_t *cur = list->first_node;
+  ListNode *cur = list->first_node;
 
   int prev = -1;
   while (cur)
@@ -225,10 +226,10 @@ list_set_indexes (list_t *list)
     }
 }
 
-static list_node_t *
-list_get_node (list_t *list, unsigned int index)
+static ListNode *
+list_get_node (List *list, unsigned int index)
 {
-  list_node_t *cur = list->first_node;
+  ListNode *cur = list->first_node;
 
     if (!cur)
       return NULL;
@@ -249,10 +250,10 @@ list_get_node (list_t *list, unsigned int index)
     return NULL;
 }
 
-static list_item_t *
-list_get_item (list_t *list, unsigned int index)
+static ListItem *
+list_get_item (List *list, unsigned int index)
 {
-  list_node_t *node = list_get_node(list, index);
+  ListNode *node = list_get_node(list, index);
 
   if (node)
     return node->item;
@@ -262,9 +263,9 @@ list_get_item (list_t *list, unsigned int index)
 
 
 static unsigned int
-get_rand_min (list_t *list)
+get_rand_min (List *list)
 {
-  list_node_t *node = list_get_node (list, list->last_called);
+  ListNode *node = list_get_node (list, list->last_called);
 
   unsigned int min = node->prev ?
       node->prev->max_index + 1 : 0;
@@ -284,9 +285,9 @@ get_rand_min (list_t *list)
 }
 
 static unsigned int
-get_rand_max (list_t *list)
+get_rand_max (List *list)
 {
-  list_node_t *node = list_get_node (list, list->last_called);
+  ListNode *node = list_get_node (list, list->last_called);
 
   unsigned int min = node->prev ?
       node->prev->max_index + 1 : 0;

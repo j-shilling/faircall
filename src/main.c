@@ -157,7 +157,7 @@ static void usage();*/
  * GLOBAL VARIABLES                                                     *
  ************************************************************************/
 char *file = NULL;
-list_t *list = NULL;
+List *list = NULL;
 char *class = NULL;
 
 unsigned int last_index = 0;

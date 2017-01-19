@@ -15,29 +15,24 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __LIST_H__
-#define __LIST_H__
+#include <stdlib.h>
+#include <string.h>
 
-#include <stdbool.h>
+#include "../config.h"
 
-#include "student.h"
+#ifdef  HAVE_STRDUP
 
-typedef struct _List List;
+extern char *strdup (const char *str);
 
-List *
-list_new (char *class_name);
-void
-list_free (List *list);
+#else  /* don't have strdup */
 
-void
-list_add (List *list, char *name, unsigned int called, unsigned int slots);
 char *
-list_get_name (List *list, unsigned int index);
-unsigned int
-list_get_times_called_on (List * list, unsigned int index);
-double
-list_get_odds (List *list, unsigned int index);
-char *
-list_call_next (List *list);
+strdup (const char *str)
+{
+  char *ret = (char *) malloc (strlen(str) + 1);
+  strcpy (ret, str);
 
-#endif /* __LIST_H__ */
+  return ret;
+}
+
+#endif  /* HAVE_STRDUP */

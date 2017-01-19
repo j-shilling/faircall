@@ -24,21 +24,23 @@
 
 START_TEST (test_list_new)
     {
-      list_t *list = list_new (NULL);
+      List *list = list_new (NULL);
       ck_assert(list == NULL);
 
       list = list_new ("class1");
-      ck_assert(list != NULL);
-      ck_assert(list->first_node == NULL);
-      ck_assert(list->max_index == 0);
-      ck_assert(list->last_called == 0);
+
+      ck_assert_ptr_ne (list, NULL);
+      ck_assert_ptr_eq (list->first_node, NULL);
+
+      ck_assert_int_eq (list->max_index, 0);
+      ck_assert_int_eq (list->last_called, 0);
 
       list_free (list);
     }END_TEST
 
 START_TEST (test_list_add)
     {
-      list_t *list = list_new ("class1");
+      List *list = list_new ("class1");
 
       list_add (list, "one", 1, 3);
       list_add (list, "two", 3, 2);
@@ -46,57 +48,57 @@ START_TEST (test_list_add)
       list_add (list, "four", 3, 3);
       list_add (list, "five", 2, 1);
 
-      list_node_t *cur = list->first_node;
+      ListNode *cur = list->first_node;
 
-      ck_assert(cur != NULL);
-      ck_assert(strcmp (cur->item->name, "one") == 0);
-      ck_assert(cur->item->called == 1);
-      ck_assert(cur->item->slots == 3);
-      ck_assert(cur->prev == NULL);
-      ck_assert(cur->max_index == 2);
-
-      cur = cur->next;
-
-      ck_assert(cur != NULL);
-      ck_assert(strcmp (cur->item->name, "two") == 0);
-      ck_assert(cur->item->called == 3);
-      ck_assert(cur->item->slots == 2);
-      ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 4);
+      ck_assert_ptr_ne(cur, NULL);
+      ck_assert_str_eq(cur->item->name, "one");
+      ck_assert_int_eq(cur->item->called, 1);
+      ck_assert_int_eq(cur->item->slots, 3);
+      ck_assert_ptr_eq(cur->prev, NULL);
+      ck_assert_int_eq(cur->max_index, 2);
 
       cur = cur->next;
 
-      ck_assert(cur != NULL);
-      ck_assert(strcmp (cur->item->name, "three") == 0);
-      ck_assert(cur->item->called == 2);
-      ck_assert(cur->item->slots == 4);
-      ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 8);
+      ck_assert_ptr_ne(cur, NULL);
+      ck_assert_str_eq(cur->item->name, "two");
+      ck_assert_int_eq(cur->item->called, 3);
+      ck_assert_int_eq(cur->item->slots, 2);
+      ck_assert_ptr_ne(cur->prev, NULL);
+      ck_assert_int_eq(cur->max_index, 4);
 
       cur = cur->next;
 
-      ck_assert(cur != NULL);
-      ck_assert(strcmp (cur->item->name, "four") == 0);
-      ck_assert(cur->item->called == 3);
-      ck_assert(cur->item->slots == 3);
-      ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 11);
+      ck_assert_ptr_ne(cur, NULL);
+      ck_assert_str_eq(cur->item->name, "three");
+      ck_assert_int_eq(cur->item->called, 2);
+      ck_assert_int_eq(cur->item->slots, 4);
+      ck_assert_ptr_ne(cur->prev, NULL);
+      ck_assert_int_eq(cur->max_index, 8);
 
       cur = cur->next;
 
-      ck_assert(cur != NULL);
-      ck_assert(strcmp (cur->item->name, "five") == 0);
-      ck_assert(cur->item->called == 2);
-      ck_assert(cur->item->slots == 1);
-      ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 12);
+      ck_assert_ptr_ne(cur, NULL);
+      ck_assert_str_eq(cur->item->name, "four");
+      ck_assert_int_eq(cur->item->called, 3);
+      ck_assert_int_eq(cur->item->slots, 3);
+      ck_assert_ptr_ne(cur->prev, NULL);
+      ck_assert_int_eq(cur->max_index, 11);
+
+      cur = cur->next;
+
+      ck_assert_ptr_ne(cur, NULL);
+      ck_assert_str_eq(cur->item->name, "five");
+      ck_assert_int_eq(cur->item->called, 2);
+      ck_assert_int_eq(cur->item->slots, 1);
+      ck_assert_ptr_ne(cur->prev, NULL);
+      ck_assert_int_eq(cur->max_index, 12);
 
       ck_assert(cur->next == NULL);
     }END_TEST
 
 START_TEST(test_get_name)
     {
-      list_t *list = list_new ("class1");
+      List *list = list_new ("class1");
 
       list_add (list, "one", 1, 3);
       list_add (list, "two", 3, 2);
@@ -104,32 +106,32 @@ START_TEST(test_get_name)
       list_add (list, "four", 3, 3);
       list_add (list, "five", 2, 1);
 
-      ck_assert(0 == strcmp ("one", list_get_name (list, 0)));
-      ck_assert(0 == strcmp ("one", list_get_name (list, 1)));
-      ck_assert(0 == strcmp ("one", list_get_name (list, 2)));
+      ck_assert_str_eq ("one", list_get_name (list, 0));
+      ck_assert_str_eq ("one", list_get_name (list, 1));
+      ck_assert_str_eq ("one", list_get_name (list, 2));
 
-      ck_assert(0 == strcmp ("two", list_get_name (list, 3)));
-      ck_assert(0 == strcmp ("two", list_get_name (list, 4)));
+      ck_assert_str_eq ("two", list_get_name (list, 3));
+      ck_assert_str_eq ("two", list_get_name (list, 4));
 
-      ck_assert(0 == strcmp ("three", list_get_name (list, 5)));
-      ck_assert(0 == strcmp ("three", list_get_name (list, 6)));
-      ck_assert(0 == strcmp ("three", list_get_name (list, 7)));
-      ck_assert(0 == strcmp ("three", list_get_name (list, 8)));
+      ck_assert_str_eq ("three", list_get_name (list, 5));
+      ck_assert_str_eq ("three", list_get_name (list, 6));
+      ck_assert_str_eq ("three", list_get_name (list, 7));
+      ck_assert_str_eq ("three", list_get_name (list, 8));
 
-      ck_assert(0 == strcmp ("four", list_get_name (list, 9)));
-      ck_assert(0 == strcmp ("four", list_get_name (list, 10)));
-      ck_assert(0 == strcmp ("four", list_get_name (list, 11)));
+      ck_assert_str_eq ("four", list_get_name (list, 9));
+      ck_assert_str_eq ("four", list_get_name (list, 10));
+      ck_assert_str_eq ("four", list_get_name (list, 11));
 
-      ck_assert(0 == strcmp ("five", list_get_name (list, 12)));
+      ck_assert_str_eq ("five", list_get_name (list, 12));
 
-      ck_assert(list_get_name(list, 112) == NULL);
+      ck_assert_ptr_eq (list_get_name(list, 112), NULL);
 
       list_free (list);
     }END_TEST
 
 START_TEST(test_get_times_called_on)
     {
-      list_t *list = list_new ("class1");
+      List *list = list_new ("class1");
 
       list_add (list, "one", 1, 3);
       list_add (list, "two", 3, 2);
@@ -154,7 +156,7 @@ START_TEST (test_call_next)
       /*
        * Build List of with nstudents
        */
-      list_node_t *list = list_new ("class1");
+      ListNode *list = list_new ("class1");
 
       for (int i = 0; i < nstudents; i++)
 	{

@@ -219,10 +219,10 @@ get_class_list ()
   return ret;
 }
 
-list_t *
+List *
 get_student_list (char *class)
 {
-  list_t *ret = list_new (class);
+  List *ret = list_new (class);
 
   xmlDocPtr doc = open_doc ();
     if (!doc)
