@@ -6,6 +6,8 @@ faircall_SOURCES = main.c \
 		 random.c \
 		 list.c \
 		 list.h \
+		 io.c \
+		 io.h \
 		 class.c \
 		 class.h
 faircall_CFLAGS = $(XML_CFLAGS) $(GTK_CFLAGS)

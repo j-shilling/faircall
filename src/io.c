@@ -48,12 +48,12 @@ io_set_filename (char *name)
   file = NULL;
 
   if (access (name, F_OK) != 0)
-      {
-        if (errno != ENOENT)
-  	{
-  	     return ACCESS_FAILED;
-  	    }
-      }
+    {
+      if (errno != ENOENT)
+	{
+	  return ACCESS_FAILED;
+	}
+    }
 
   file = strdup (name);
   return SUCCESS;
@@ -62,14 +62,14 @@ io_set_filename (char *name)
 io_err
 io_save_list_item (List *list, unsigned int index)
 {
-  xmlDocPtr doc = open_doc();
+  xmlDocPtr doc = open_doc ();
 
   if (!doc)
     {
       return errno == ACCESS_FAILED ? ACCESS_FAILED : PARSE_FAILED;
     }
 
-  xmlNodePtr root = get_root(doc);
+  xmlNodePtr root = get_root (doc);
 
   if (!root)
     {
@@ -92,10 +92,9 @@ io_save_list_item (List *list, unsigned int index)
 
   save_item (list_get_name (list, index), index, FALSE,
 	     list_get_times_called_on (list, index),
-	     list_get_slots (list, index),
-	     class_node);
+	     list_get_slots (list, index), class_node);
 
-  xmlSaveFormatFile (get_doc_name(), doc, 0);
+  xmlSaveFormatFile (get_doc_name (), doc, 0);
   xmlFreeDoc (doc);
 
   return SUCCESS;
@@ -104,14 +103,14 @@ io_save_list_item (List *list, unsigned int index)
 io_err
 io_save_list (List *list)
 {
-  xmlDocPtr doc = open_doc();
+  xmlDocPtr doc = open_doc ();
 
   if (!doc)
     {
       return errno == ACCESS_FAILED ? ACCESS_FAILED : PARSE_FAILED;
     }
 
-  xmlNodePtr root = get_root(doc);
+  xmlNodePtr root = get_root (doc);
 
   if (!root)
     {
@@ -134,7 +133,7 @@ io_save_list (List *list)
 
   list_for_each (list, save_item, class_node);
 
-  xmlSaveFormatFile (get_doc_name(), doc, 0);
+  xmlSaveFormatFile (get_doc_name (), doc, 0);
   xmlFreeDoc (doc);
 
   return SUCCESS;
@@ -145,29 +144,71 @@ io_load_list (char *class_name)
 {
   List *ret = NULL;
 
-  xmlDocPtr doc = open_doc();
+  xmlDocPtr doc = open_doc ();
   if (doc)
-  {
-    xmlNodePtr class_node = get_class (doc, class_name);
-    if (class_node)
-      {
-	ret = list_new (class_name);
+    {
+      xmlNodePtr class_node = get_class (doc, class_name);
+      if (class_node)
+	{
+	  ret = list_new (class_name);
 
-	xmlNodePtr cur = class_node->xmlChildrenNode;
-	while (cur)
-	  {
-	    if (!xmlStrcmp (cur->name, STUDENT))
-	      {
-		list_add (ret,
-			  xmlGetProp (cur, NAME),
-			  atoi (xmlGetProp (cur, CALLED)),
-			  atoi (xmlGetProp (cur, SLOTS)));
-	      }
+	  xmlNodePtr cur = class_node->xmlChildrenNode;
+	  while (cur)
+	    {
+	      if (!xmlStrcmp (cur->name, STUDENT))
+		{
+		  list_add (ret, xmlGetProp (cur, NAME),
+			    atoi (xmlGetProp (cur, CALLED)),
+			    atoi (xmlGetProp (cur, SLOTS)));
+		}
 
-	    cur = cur->next;
-	  }
-      }
-  }
+	      cur = cur->next;
+	    }
+	}
+
+      xmlFreeDoc (doc);
+    }
+
+  return ret;
+}
+
+char **
+io_get_available_classes ()
+{
+  unsigned int length = 0;
+  char **ret = NULL;
+
+  xmlDocPtr doc = open_doc ();
+  if (doc)
+    {
+      xmlNodePtr root = get_root (doc);
+      if (root)
+	{
+	  xmlNodePtr cur = root->xmlChildrenNode;
+	  while (cur)
+	    {
+	      if (!xmlStrcmp (cur->name, CLASS))
+		length++;
+	    }
+
+	  ret = (char **) malloc (sizeof(char *) * (length + 1));
+	  cur = root->xmlChildrenNode;
+	  int i = 0;
+	  while (cur)
+	    {
+	      if (!xmlStrcmp (cur->name, CLASS))
+		{
+		  ret[i] = xmlGetProp (cur, NAME);
+		  i++;
+		}
+	      cur = cur->next;
+	    }
+	  ret[i] = NULL;
+
+	}
+
+      xmlFreeDoc (doc);
+    }
 
   return ret;
 }
@@ -178,8 +219,7 @@ io_load_list (char *class_name)
 
 static void
 save_item (char *name, unsigned int index, bool is_last_called,
-			unsigned int called, unsigned int slots,
-			void *data)
+	   unsigned int called, unsigned int slots, void *data)
 {
   xmlNodePtr class_node = (xmlNodePtr) data;
 
@@ -254,21 +294,22 @@ open_doc ()
     {
       if (errno == ENOENT)
 	{
-	      doc = xmlNewDoc (BAD_CAST "1.0");
-	      xmlNodePtr root = xmlNewNode (NULL, BAD_CAST "root");
-	      xmlDocSetRootElement (doc, root);
+	  doc = xmlNewDoc (BAD_CAST "1.0");
+	  xmlNodePtr root = xmlNewNode (NULL, BAD_CAST "root");
+	  xmlDocSetRootElement (doc, root);
 
-	      return doc;
-	    }
+	  return doc;
+	}
       else
 	{
 
-      errno = ACCESS_FAILED;
+	  errno = ACCESS_FAILED;
 	}
     }
   else
     {
-      LIBXML_TEST_VERSION;
+      LIBXML_TEST_VERSION
+      ;
 
       doc = xmlParseFile (get_doc_name ());
 
@@ -303,7 +344,7 @@ get_class (xmlDocPtr doc, char *class)
   while (cur != NULL)
     {
       if (!xmlStrcmp (cur->name, CLASS))
-	if (!xmlStrcmp (class, xmlGetProp(cur, NAME)))
+	if (!xmlStrcmp (class, xmlGetProp (cur, NAME)))
 	  return cur;
 
       cur = cur->next;
@@ -359,7 +400,7 @@ get_class_list ()
       cur = cur->next;
     }
 
-  class_t **ret = (class_t **) malloc (sizeof(class_t *) * (i+1));
+  class_t **ret = (class_t **) malloc (sizeof(class_t *) * (i + 1));
   i = 0;
 
   cur = root->xmlChildrenNode;
@@ -387,8 +428,8 @@ get_student_list (char *class)
   List *ret = list_new (class);
 
   xmlDocPtr doc = open_doc ();
-    if (!doc)
-      return NULL;
+  if (!doc)
+    return NULL;
 
   xmlNodePtr class_node = get_class (doc, class);
 
@@ -403,9 +444,9 @@ get_student_list (char *class)
     {
       if (!xmlStrcmp (cur->name, STUDENT))
 	{
-	  list_add (ret, xmlGetProp(cur, NAME),
-		    atoi (xmlGetProp(cur, CALLED)),
-		    atoi (xmlGetProp(cur, SLOTS)));
+	  list_add (ret, xmlGetProp (cur, NAME),
+		    atoi (xmlGetProp (cur, CALLED)),
+		    atoi (xmlGetProp (cur, SLOTS)));
 	}
 
       cur = cur->next;
@@ -416,26 +457,22 @@ get_student_list (char *class)
   return ret;
 }
 
-
-
 #ifdef __TEST_SAVE_LIST_ITEM
-
 
 int
 main (int argc, char **argv)
-{
-  io_set_filename ("test.xml");
-  List *list = list_new ("class1");
+  {
+    io_set_filename ("test.xml");
+    List *list = list_new ("class1");
 
-  list_add (list, argv[1], atoi (argv[2]), atoi (argv[3]));
-  io_err ret = io_save_list_item (list, 0);
+    list_add (list, argv[1], atoi (argv[2]), atoi (argv[3]));
+    io_err ret = io_save_list_item (list, 0);
 
-  if (ret != SUCCESS)
+    if (ret != SUCCESS)
     fprintf (stderr, "io_save_list_item retured %d\n", ret);
 
-  return ret == SUCCESS;
-}
-
+    return ret == SUCCESS;
+  }
 
 #endif
 
@@ -443,18 +480,18 @@ main (int argc, char **argv)
 
 static void
 print_info (char *name, unsigned int index, bool is_last_called,
-			unsigned int called, unsigned int slots,
-			void *data)
-{
-  printf ("%s: %d %d\n", name, called, slots);
-}
+    unsigned int called, unsigned int slots,
+    void *data)
+  {
+    printf ("%s: %d %d\n", name, called, slots);
+  }
 
 int
 main (int argc, char **argv)
-{
-  io_set_filename (argv[1]);
+  {
+    io_set_filename (argv[1]);
 
-  List *list = io_load_list (argv[2]);
-  list_for_each (list, print_info, NULL);
-}
+    List *list = io_load_list (argv[2]);
+    list_for_each (list, print_info, NULL);
+  }
 #endif
