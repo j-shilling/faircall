@@ -15,25 +15,35 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __IO_H__
-#define __IO_H__
+#include "io.h"
 
-#include "class.h"
-#include "list.h"
+#define CLASS	"class"
+#define STUDENT "student"
+#define NAME    "name"
+#define CALLED  "called"
+#define INDEX   "index"
+#define SLOTS   "slots"
 
-typedef enum {
-  SUCCESS = 0,
-  ASPRINTF_FAILED = -1,
-  MKDIR_FAILED = -2,
-  ACCESS_FAILED = -3,
-  PARSE_FAILED = -4,
-  ROOT_FAILED = -5,
-  NOSUCHCLASS = -6
-} io_err;
+extern int errno;
 
-extern io_err io_set_filename (char *name);
-extern io_err io_save_list (List *list);
-extern io_err io_save_list_item (List *list, unsigned int index);
-extern List * io_load_list (char *class_name);
+char *file = 0;
+const char *DOCNAME = "roster";
 
-#endif /* __IO_H__ */
+static char *
+get_doc_name ();
+
+static xmlDocPtr
+open_doc ();
+
+static xmlNodePtr
+get_root (xmlDocPtr doc);
+
+static xmlNodePtr
+get_class (xmlDocPtr doc, char *class);
+
+static class_t *
+parse_class (xmlNodePtr node);
+
+static void save_item (char *name, unsigned int index, bool is_last_called,
+			unsigned int called, unsigned int slots,
+			void *data);

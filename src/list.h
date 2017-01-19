@@ -23,6 +23,10 @@
 #include "student.h"
 
 typedef struct _List List;
+typedef void (*process_list_item)
+    (char *name, unsigned int index, bool is_last_called,
+	unsigned int called, unsigned int slots,
+	void *data);
 
 List *
 list_new (char *class_name);
@@ -33,11 +37,19 @@ void
 list_add (List *list, char *name, unsigned int called, unsigned int slots);
 char *
 list_get_name (List *list, unsigned int index);
+char *
+list_get_class_name (List *list);
 unsigned int
 list_get_times_called_on (List * list, unsigned int index);
 double
 list_get_odds (List *list, unsigned int index);
+unsigned int
+list_get_last_called (List *list);
+unsigned int
+list_get_slots (List *list, unsigned int index);
 char *
 list_call_next (List *list);
+void
+list_for_each (List *list, process_list_item func, void *data);
 
 #endif /* __LIST_H__ */

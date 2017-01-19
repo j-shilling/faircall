@@ -117,6 +117,12 @@ list_get_name (List *list, unsigned int index)
   return ret;
 }
 
+char *
+list_get_class_name (List *list)
+{
+  return list->class_name;
+}
+
 unsigned int
 list_get_times_called_on (List * list, unsigned int index)
 {
@@ -182,6 +188,39 @@ list_call_next (List *list)
      * Return selected name
      */
     return item->name;
+}
+
+unsigned int
+list_get_last_called (List *list)
+{
+  return list->last_called;
+}
+
+unsigned int
+list_get_slots (List *list, unsigned int index)
+{
+  ListNode *node = list_get_node (list, index);
+
+  if (!node)
+    return 0;
+
+  return node->slots;
+}
+
+void
+list_for_each (List *list, process_list_item func, void *data)
+{
+  ListNode *node = list->first_node;
+
+  while (node)
+    {
+      func (node->name,
+	    node->max_index, node->max_index == list->last_called,
+	    node->called, node->slots,
+	    data);
+
+      node = node->next;
+    }
 }
 
 /************************************************************************
