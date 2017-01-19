@@ -53,7 +53,7 @@ START_TEST (test_list_add)
       ck_assert(cur->item->called == 1);
       ck_assert(cur->item->slots == 3);
       ck_assert(cur->prev == NULL);
-      ck_assert(cur->max_index == 3);
+      ck_assert(cur->max_index == 2);
 
       cur = cur->next;
 
@@ -62,7 +62,7 @@ START_TEST (test_list_add)
       ck_assert(cur->item->called == 3);
       ck_assert(cur->item->slots == 2);
       ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 5);
+      ck_assert(cur->max_index == 4);
 
       cur = cur->next;
 
@@ -71,7 +71,7 @@ START_TEST (test_list_add)
       ck_assert(cur->item->called == 2);
       ck_assert(cur->item->slots == 4);
       ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 10);
+      ck_assert(cur->max_index == 8);
 
       cur = cur->next;
 
@@ -80,7 +80,7 @@ START_TEST (test_list_add)
       ck_assert(cur->item->called == 3);
       ck_assert(cur->item->slots == 3);
       ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 13);
+      ck_assert(cur->max_index == 11);
 
       cur = cur->next;
 
@@ -89,7 +89,7 @@ START_TEST (test_list_add)
       ck_assert(cur->item->called == 2);
       ck_assert(cur->item->slots == 1);
       ck_assert(cur->prev != NULL);
-      ck_assert(cur->max_index == 14);
+      ck_assert(cur->max_index == 12);
 
       ck_assert(cur->next == NULL);
     }END_TEST
@@ -107,16 +107,21 @@ START_TEST(test_get_name)
       ck_assert(0 == strcmp ("one", list_get_name (list, 0)));
       ck_assert(0 == strcmp ("one", list_get_name (list, 1)));
       ck_assert(0 == strcmp ("one", list_get_name (list, 2)));
+
       ck_assert(0 == strcmp ("two", list_get_name (list, 3)));
       ck_assert(0 == strcmp ("two", list_get_name (list, 4)));
+
       ck_assert(0 == strcmp ("three", list_get_name (list, 5)));
       ck_assert(0 == strcmp ("three", list_get_name (list, 6)));
       ck_assert(0 == strcmp ("three", list_get_name (list, 7)));
       ck_assert(0 == strcmp ("three", list_get_name (list, 8)));
+
       ck_assert(0 == strcmp ("four", list_get_name (list, 9)));
       ck_assert(0 == strcmp ("four", list_get_name (list, 10)));
       ck_assert(0 == strcmp ("four", list_get_name (list, 11)));
+
       ck_assert(0 == strcmp ("five", list_get_name (list, 12)));
+
       ck_assert(list_get_name(list, 112) == NULL);
 
       list_free (list);
@@ -143,8 +148,8 @@ START_TEST(test_get_times_called_on)
 
 START_TEST (test_call_next)
     {
-      const unsigned int nstudents = 25;
-      const unsigned int ntests = 1000;
+      const unsigned int nstudents = 10;
+      const unsigned int ntests = 100;
 
       /*
        * Build List of with nstudents

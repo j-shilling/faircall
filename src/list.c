@@ -32,28 +32,6 @@
 #include "asprintf.h"
 
 /************************************************************************
- * STATIC FUNCTIONS DECLARATIONS                                        *
- ************************************************************************/
-
-static void
-list_node_free (list_node_t *node);
-
-static void
-list_set_indexes (list_t *list);
-
-static list_node_t *
-list_get_node (list_t *list, unsigned int index);
-
-static list_item_t *
-list_get_item (list_t *list, unsigned int index);
-
-static unsigned int
-get_rand_min (list_t *list);
-
-static unsigned int
-get_rand_max (list_t *list);
-
-/************************************************************************
  * CONSTRUCTOR AND DESTRUCTOR                                           *
  ************************************************************************/
 
@@ -103,7 +81,7 @@ list_add (list_t *list, char *name, unsigned int called, unsigned int slots)
   item->called = called;
   item->slots = slots;
 
-  list_node_t *node = (list_node_t *) malloc (sizeof (list_node_t *));
+  list_node_t *node = (list_node_t *) malloc (sizeof (list_node_t));
   node->item = item;
   node->next = NULL;
 
@@ -121,6 +99,7 @@ list_add (list_t *list, char *name, unsigned int called, unsigned int slots)
     {
       list->first_node = node;
       node->max_index = item->slots;
+      node->prev = NULL;
     }
 
   list_set_indexes (list);
@@ -186,13 +165,15 @@ list_call_next (list_t *list)
      * less likely to get picked and who ever wasn't more
      * likely.
      */
-    if (item->slots > 1) item->slots++;
+    if (item->slots > 1) item->slots--;
 
     list_node_t *node = list->first_node;
     while (node)
       {
 	if (node->item != item)
 	  node->item->slots++;
+
+	node = node->next;
       }
 
     list_set_indexes (list);
@@ -232,12 +213,13 @@ list_set_indexes (list_t *list)
 {
   list_node_t *cur = list->first_node;
 
+  int prev = -1;
   while (cur)
     {
       if (cur->prev)
-	cur->max_index = cur->prev->max_index + cur->item->slots;
-      else
-	cur->max_index = cur->item->slots;
+	prev = cur->prev->max_index;
+
+      cur->max_index = prev + cur->item->slots;
 
       cur = cur->next;
     }
@@ -253,8 +235,13 @@ list_get_node (list_t *list, unsigned int index)
 
     while (cur->next)
       {
-        if ((index <= cur->max_index) && (index > cur->prev->max_index))
-  	return cur;
+	int min = 0;
+
+	if (cur->prev)
+	  min = cur->prev->max_index + 1;
+
+        if ((index <= cur->max_index) && (index >= min))
+          return cur;
 
         cur = cur->next;
       }
