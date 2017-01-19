@@ -21,22 +21,19 @@
  * STRUCT DEFINITIONS                                                   *
  ************************************************************************/
 
-typedef struct _ListItem ListItem;
 typedef struct _ListNode ListNode;
-
-struct _ListItem
-{
-  char *name;
-  unsigned int called;
-  unsigned int slots;
-};
+typedef struct _RandLimits RandLimits;
 
 struct _ListNode
 {
-  ListItem *item;
-  unsigned int max_index;
   ListNode *next;
   ListNode *prev;
+
+  char *name;
+
+  unsigned int max_index;
+  unsigned int called;
+  unsigned int slots;
 };
 
 struct _List
@@ -45,6 +42,12 @@ struct _List
   char *class_name;
   unsigned int max_index;
   unsigned int last_called;
+};
+
+struct _RandLimits
+{
+  unsigned int min;
+  unsigned int max;
 };
 
 /************************************************************************
@@ -60,11 +63,5 @@ list_set_indexes (List *list);
 static ListNode *
 list_get_node (List *list, unsigned int index);
 
-static ListItem *
-list_get_item (List *list, unsigned int index);
-
-static unsigned int
-get_rand_min (List *list);
-
-static unsigned int
-get_rand_max (List *list);
+static RandLimits
+get_rand_limits (List *list);

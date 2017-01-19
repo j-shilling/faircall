@@ -51,45 +51,45 @@ START_TEST (test_list_add)
       ListNode *cur = list->first_node;
 
       ck_assert_ptr_ne(cur, NULL);
-      ck_assert_str_eq(cur->item->name, "one");
-      ck_assert_int_eq(cur->item->called, 1);
-      ck_assert_int_eq(cur->item->slots, 3);
+      ck_assert_str_eq(cur->name, "one");
+      ck_assert_int_eq(cur->called, 1);
+      ck_assert_int_eq(cur->slots, 3);
       ck_assert_ptr_eq(cur->prev, NULL);
       ck_assert_int_eq(cur->max_index, 2);
 
       cur = cur->next;
 
       ck_assert_ptr_ne(cur, NULL);
-      ck_assert_str_eq(cur->item->name, "two");
-      ck_assert_int_eq(cur->item->called, 3);
-      ck_assert_int_eq(cur->item->slots, 2);
+      ck_assert_str_eq(cur->name, "two");
+      ck_assert_int_eq(cur->called, 3);
+      ck_assert_int_eq(cur->slots, 2);
       ck_assert_ptr_ne(cur->prev, NULL);
       ck_assert_int_eq(cur->max_index, 4);
 
       cur = cur->next;
 
       ck_assert_ptr_ne(cur, NULL);
-      ck_assert_str_eq(cur->item->name, "three");
-      ck_assert_int_eq(cur->item->called, 2);
-      ck_assert_int_eq(cur->item->slots, 4);
+      ck_assert_str_eq(cur->name, "three");
+      ck_assert_int_eq(cur->called, 2);
+      ck_assert_int_eq(cur->slots, 4);
       ck_assert_ptr_ne(cur->prev, NULL);
       ck_assert_int_eq(cur->max_index, 8);
 
       cur = cur->next;
 
       ck_assert_ptr_ne(cur, NULL);
-      ck_assert_str_eq(cur->item->name, "four");
-      ck_assert_int_eq(cur->item->called, 3);
-      ck_assert_int_eq(cur->item->slots, 3);
+      ck_assert_str_eq(cur->name, "four");
+      ck_assert_int_eq(cur->called, 3);
+      ck_assert_int_eq(cur->slots, 3);
       ck_assert_ptr_ne(cur->prev, NULL);
       ck_assert_int_eq(cur->max_index, 11);
 
       cur = cur->next;
 
       ck_assert_ptr_ne(cur, NULL);
-      ck_assert_str_eq(cur->item->name, "five");
-      ck_assert_int_eq(cur->item->called, 2);
-      ck_assert_int_eq(cur->item->slots, 1);
+      ck_assert_str_eq(cur->name, "five");
+      ck_assert_int_eq(cur->called, 2);
+      ck_assert_int_eq(cur->slots, 1);
       ck_assert_ptr_ne(cur->prev, NULL);
       ck_assert_int_eq(cur->max_index, 12);
 
@@ -150,8 +150,8 @@ START_TEST(test_get_times_called_on)
 
 START_TEST (test_call_next)
     {
-      const unsigned int nstudents = 10;
-      const unsigned int ntests = 100;
+      const unsigned int nstudents = 25;
+      const unsigned int ntests = 1000;
 
       /*
        * Build List of with nstudents

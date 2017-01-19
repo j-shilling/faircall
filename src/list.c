@@ -77,13 +77,10 @@ list_add (List *list, char *name, unsigned int called, unsigned int slots)
 {
   assert (list);
 
-  ListItem *item = (ListItem *) malloc (sizeof (ListItem));
-  item->name = strdup (name);
-  item->called = called;
-  item->slots = slots;
-
   ListNode *node = (ListNode *) malloc (sizeof (ListNode));
-  node->item = item;
+  node->name = strdup (name);
+  node->called = called;
+  node->slots = slots;
   node->next = NULL;
 
   if (list->first_node)
@@ -99,7 +96,7 @@ list_add (List *list, char *name, unsigned int called, unsigned int slots)
   else
     {
       list->first_node = node;
-      node->max_index = item->slots;
+      node->max_index = node->slots;
       node->prev = NULL;
     }
 
@@ -112,7 +109,7 @@ list_get_name (List *list, unsigned int index)
 {
   char *ret = NULL;
 
-  ListItem *item = list_get_item (list, index);
+  ListNode *item = list_get_node (list, index);
 
   if (item)
     ret = item->name;
@@ -123,7 +120,7 @@ list_get_name (List *list, unsigned int index)
 unsigned int
 list_get_times_called_on (List * list, unsigned int index)
 {
-  ListItem *item = list_get_item (list, index);
+  ListNode *item = list_get_node (list, index);
 
   if (item)
     return item->called;
@@ -134,15 +131,14 @@ list_get_times_called_on (List * list, unsigned int index)
 double
 list_get_odds (List *list, unsigned int index)
 {
-  int min = get_rand_min (list);
-    int max = get_rand_max (list);
+  RandLimits limits = get_rand_limits (list);
 
     ListNode *node = list_get_node (list, index);
 
-    if ((min > node->max_index) || (max < node->max_index))
+    if ((limits.min > node->max_index) || (limits.max < node->max_index))
       return 0.0;
 
-    return ((double) node->item->slots / (double) (max - min + 1));
+    return ((double) node->slots / (double) (limits.max - limits.min + 1));
 }
 
 char *
@@ -152,14 +148,15 @@ list_call_next (List *list)
      * Get an index that will not return the same student as
      * last_called
      */
+
+    RandLimits limits = get_rand_limits (list);
     unsigned int index = get_rand_int (
-	get_rand_min (list), get_rand_max (list));
+	limits.min, limits.max);
 
     /*
      * Get selection
      */
-    ListItem *item = list_get_item (list, index);
-    list->last_called = index;
+    ListNode *item = list_get_node (list, index);
 
     /*
      * Update the list by making whoever was called on
@@ -171,13 +168,15 @@ list_call_next (List *list)
     ListNode *node = list->first_node;
     while (node)
       {
-	if (node->item != item)
-	  node->item->slots++;
+	if (node != item)
+	  node->slots++;
 
 	node = node->next;
       }
 
     list_set_indexes (list);
+
+    list->last_called = item->max_index;
 
     /*
      * Return selected name
@@ -197,13 +196,8 @@ list_node_free (ListNode *node)
       if (node->next)
 	list_node_free (node->next);
 
-      if (node->item)
-	{
-	  if (node->item->name)
-	    free (node->item->name);
-
-	  free (node->item);
-	}
+      if (node->name)
+	free (node->name);
 
       free (node);
     }
@@ -213,6 +207,7 @@ static void
 list_set_indexes (List *list)
 {
   ListNode *cur = list->first_node;
+  unsigned int max_index = 0;
 
   int prev = -1;
   while (cur)
@@ -220,10 +215,15 @@ list_set_indexes (List *list)
       if (cur->prev)
 	prev = cur->prev->max_index;
 
-      cur->max_index = prev + cur->item->slots;
+      cur->max_index = prev + cur->slots;
+
+      if (cur->max_index > max_index)
+	max_index = cur->max_index;
 
       cur = cur->next;
     }
+
+  list->max_index = max_index;
 }
 
 static ListNode *
@@ -234,7 +234,7 @@ list_get_node (List *list, unsigned int index)
     if (!cur)
       return NULL;
 
-    while (cur->next)
+    while (cur)
       {
 	int min = 0;
 
@@ -250,20 +250,8 @@ list_get_node (List *list, unsigned int index)
     return NULL;
 }
 
-static ListItem *
-list_get_item (List *list, unsigned int index)
-{
-  ListNode *node = list_get_node(list, index);
-
-  if (node)
-    return node->item;
-
-  return NULL;
-}
-
-
-static unsigned int
-get_rand_min (List *list)
+static RandLimits
+get_rand_limits (List *list)
 {
   ListNode *node = list_get_node (list, list->last_called);
 
@@ -274,36 +262,16 @@ get_rand_min (List *list)
 
   if ((max_index - max) > min)
     {
-      min = max == max_index ? min = max : max + 1;
+      min = max == max_index ? max : max + 1;
+      max = max_index;
     }
   else
     {
       min = 0;
+      max = min == 0 ? min : min - 1;
     }
 
-  return min;
-}
-
-static unsigned int
-get_rand_max (List *list)
-{
-  ListNode *node = list_get_node (list, list->last_called);
-
-  unsigned int min = node->prev ?
-      node->prev->max_index + 1 : 0;
-  unsigned int max = node->max_index;
-  unsigned int max_index = list->max_index;
-
-  if ((max_index - max) > min)
-    {
-      min = max == max_index ? min = max : max + 1;
-    }
-  else
-    {
-      min = 0;
-    }
-
-  return max;
+  return (RandLimits) { .min = min, .max = max };
 }
 
 
