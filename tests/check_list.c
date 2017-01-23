@@ -151,7 +151,7 @@ START_TEST(test_get_times_called_on)
 START_TEST (test_call_next)
     {
       const unsigned int nstudents = 25;
-      const unsigned int ntests = 1000;
+      const unsigned int ntests = 100;
 
       /*
        * Build List of with nstudents
@@ -162,7 +162,6 @@ START_TEST (test_call_next)
 	{
 	  char name[256];
 	  sprintf (name, "%i", i);
-	  student_t *student = new_student (name);
 
 	  list_add (list, name, 0, 1);
 	}

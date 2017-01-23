@@ -343,7 +343,7 @@ open_class (char *class, GtkBox *content_area)
 
   List *list = io_load_list (class);
 
-  GtkWidget *select_area, *stats_area, *buttons_area;
+  GtkWidget *select_area, *buttons_area;
   GtkWidget *list_area, *name_area;
 
   select_area = gtk_hbox_new (FALSE, 0);
@@ -393,13 +393,7 @@ open_class (char *class, GtkBox *content_area)
   gtk_box_pack_start (GTK_BOX(select_area), list_area, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX(select_area), name_area, TRUE, TRUE, 0);
 
-  stats_area = gtk_hbox_new (FALSE, 0);
-
-  gtk_box_pack_start (GTK_BOX(stats_area), gtk_label_new ("STATS"), TRUE, TRUE,
-		      0);
-
   gtk_box_pack_start (GTK_BOX(content_area), select_area, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX(content_area), stats_area, TRUE, TRUE, 0);
 
   gtk_widget_show_all (GTK_WIDGET(content_area));
 }
