@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
-#include <string.h>
 #include <errno.h>
 #include <limits.h>
 #include <assert.h>
@@ -42,11 +41,13 @@ list_new (char *class_name)
   if (!class_name)
     return NULL;
 
-  List *ret = (List *) malloc (sizeof (List *));
+  List *ret = (List *) malloc (sizeof (List));
 
   ret->first_node = NULL;
-  ret->max_index = 0;
-  ret->last_called = 0;
+  ret->last_node = NULL;
+  ret->last_called = NULL;
+  ret->total_slots = 0;
+  ret->size = 0;
 
   ret->class_name = strdup (class_name);
 
@@ -58,11 +59,19 @@ list_free (List *list)
 {
   if (list)
     {
-      if (list->first_node)
-	list_node_free (list->first_node);
+      ListNode *node = list->first_node;
+      for (int i = 0; i < list->size; i++)
+	{
+	  if (node)
+	    {
+	      ListNode *this = node;
+	      node = node->next;
+	      list_node_free (this);
+	    }
+	}
 
-     // if (list->class_name)
-	//free (list->class_name);
+      if (list->class_name)
+	free (list->class_name);
 
       free (list);
     }
@@ -73,34 +82,38 @@ list_free (List *list)
  ************************************************************************/
 
 void
-list_add (List *list, char *name, unsigned int called, unsigned int slots)
+list_add (List *list, const char *name, unsigned int called, unsigned int slots)
 {
   assert (list);
 
-  ListNode *node = (ListNode *) malloc (sizeof (ListNode));
-  node->name = strdup (name);
+  ListNode *node = list_node_new();
   node->called = called;
   node->slots = slots;
-  node->next = NULL;
+
+  node->name = (char *) malloc (strlen (name) + 1);
+    strcpy (node->name, name);
 
   if (list->first_node)
     {
-      ListNode *cur = list->first_node;
+      node->next = list->first_node;
+      node->prev = list->last_node;
 
-      while (cur->next)
-	cur = cur->next;
+      list->first_node->prev = node;
+      list->last_node->next = node;
 
-      cur->next = node;
-      node->prev = cur;
+      list->last_node = node;
     }
   else
     {
       list->first_node = node;
-      node->max_index = node->slots;
-      node->prev = NULL;
+      list->last_node = node;
+
+      node->next = node;
+      node->prev = node;
     }
 
-  list_set_indexes (list);
+  list->total_slots += node->slots;
+  list->size ++;
 }
 
 
@@ -137,32 +150,37 @@ list_get_times_called_on (List * list, unsigned int index)
 double
 list_get_odds (List *list, unsigned int index)
 {
-  RandLimits limits = get_rand_limits (list);
+  ListNode *node = list_get_node (list, index);
 
-    ListNode *node = list_get_node (list, index);
+  if (list->last_called == node)
+    return 0.0;
 
-    if ((limits.min > node->max_index) || (limits.max < node->max_index))
-      return 0.0;
+  unsigned int total = list->total_slots - list->last_called->slots;
 
-    return ((double) node->slots / (double) (limits.max - limits.min + 1));
+    return ((double) node->slots / (double) total);
 }
 
 char *
 list_call_next (List *list)
 {
-  /*
-     * Get an index that will not return the same student as
-     * last_called
-     */
+    int steps = get_rand_int (0,
+	list->total_slots - (list->last_called ? list->last_called->slots : 0));
 
-    RandLimits limits = get_rand_limits (list);
-    unsigned int index = get_rand_int (
-	limits.min, limits.max);
+    ListNode *cur = list_get_node (list,
+	get_rand_int (0, list->size - 1));
+    ListNode *item = NULL;
+    while (!item)
+      {
+	if (cur == list->last_called)
+	  cur = cur->next;
 
-    /*
-     * Get selection
-     */
-    ListNode *item = list_get_node (list, index);
+	steps -= cur->slots;
+
+	if (steps < 0)
+	  {
+	    item = cur;
+	  }
+      }
 
     /*
      * Update the list by making whoever was called on
@@ -172,7 +190,7 @@ list_call_next (List *list)
     if (item->slots > 1) item->slots--;
 
     ListNode *node = list->first_node;
-    while (node)
+    for (int i = 0; i < list->size; i ++)
       {
 	if (node != item)
 	  node->slots++;
@@ -180,9 +198,7 @@ list_call_next (List *list)
 	node = node->next;
       }
 
-    list_set_indexes (list);
-
-    list->last_called = item->max_index;
+    list->last_called = item;
     item->called ++;
 
     /*
@@ -194,7 +210,15 @@ list_call_next (List *list)
 unsigned int
 list_get_last_called (List *list)
 {
-  return list->last_called;
+  unsigned int ret = 0;
+  ListNode *cur = list->first_node;
+  while (cur != list->last_called)
+    {
+    cur = cur->next;
+    ret++;
+    }
+
+  return ret;
 }
 
 unsigned int
@@ -213,13 +237,15 @@ list_for_each (List *list, process_list_item func, void *data)
 {
   ListNode *node = list->first_node;
 
+  unsigned int index = 0;
+
   while (node)
     {
       func (node->name,
-	    node->max_index, node->max_index == list->last_called,
+	    index, node == list->last_called,
 	    node->called, node->slots,
 	    data);
-
+      index++;
       node = node->next;
     }
 }
@@ -228,14 +254,26 @@ list_for_each (List *list, process_list_item func, void *data)
  * STATIC FUNCTIONS DEFINITIONS                                         *
  ************************************************************************/
 
+static ListNode *
+list_node_new ()
+{
+  ListNode *ret = (ListNode *) malloc (sizeof(ListNode));
+
+  ret->next = NULL;
+  ret->prev = NULL;
+  ret->name = NULL;
+
+  ret->called = 0;
+  ret->slots = 0;
+
+  return ret;
+
+}
 static void
 list_node_free (ListNode *node)
 {
   if (node)
     {
-      if (node->next)
-	list_node_free (node->next);
-
       if (node->name)
 	free (node->name);
 
@@ -243,75 +281,20 @@ list_node_free (ListNode *node)
     }
 }
 
-static void
-list_set_indexes (List *list)
-{
-  ListNode *cur = list->first_node;
-  unsigned int max_index = 0;
-
-  int prev = -1;
-  while (cur)
-    {
-      if (cur->prev)
-	prev = cur->prev->max_index;
-
-      cur->max_index = prev + cur->slots;
-
-      if (cur->max_index > max_index)
-	max_index = cur->max_index;
-
-      cur = cur->next;
-    }
-
-  list->max_index = max_index;
-}
-
 static ListNode *
 list_get_node (List *list, unsigned int index)
 {
+  if (index >= list->size)
+    return NULL;
+
   ListNode *cur = list->first_node;
 
-    if (!cur)
-      return NULL;
-
-    while (cur)
-      {
-	int min = 0;
-
-	if (cur->prev)
-	  min = cur->prev->max_index + 1;
-
-        if ((index <= cur->max_index) && (index >= min))
-          return cur;
-
-        cur = cur->next;
-      }
-
-    return NULL;
-}
-
-static RandLimits
-get_rand_limits (List *list)
-{
-  ListNode *node = list_get_node (list, list->last_called);
-
-  unsigned int min = node->prev ?
-      node->prev->max_index + 1 : 0;
-  unsigned int max = node->max_index;
-  unsigned int max_index = list->max_index;
-
-  if ((max_index - max) > min)
+  for (int i = 0; i < index; i ++)
     {
-      min = max == max_index ? max : max + 1;
-      max = max_index;
-    }
-  else
-    {
-      min = 0;
-      max = min == 0 ? min : min - 1;
+      cur = cur->next;
     }
 
-  return (RandLimits) { .min = min, .max = max };
+  return cur;
 }
 
 

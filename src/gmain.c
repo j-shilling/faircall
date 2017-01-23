@@ -45,7 +45,7 @@ open_dialog (gpointer callback_data, guint callback_action,
 	     GtkWidget *menu_item);
 
 static void
-show_list (GtkBox *content_area, List *list);
+show_list (GtkContainer *content_area, List *list);
 
 static void
 about_dialog (gpointer callback_data, guint callback_action,
@@ -107,7 +107,7 @@ main (int argc, char *argv[])
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
 
   gtk_window_set_title (GTK_WINDOW(window), PACKAGE_NAME);
-  gtk_widget_set_size_request (GTK_WIDGET(window), 600, 600);
+  gtk_widget_set_size_request (GTK_WIDGET(window), 400, 400);
 
   g_signal_connect(window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
@@ -280,7 +280,7 @@ append_item_to_store (char *name, unsigned int index, bool is_last_called,
 }
 
 static void
-show_list (GtkBox *content_area, List *list)
+show_list (GtkContainer *content_area, List *list)
 {
 
   /*
@@ -321,7 +321,7 @@ show_list (GtkBox *content_area, List *list)
 						     NULL);
   gtk_tree_view_append_column (GTK_TREE_VIEW(tree), column);
 
-  gtk_box_pack_start (GTK_BOX(content_area), tree, TRUE, TRUE, 0);
+  gtk_container_add (GTK_CONTAINER(content_area), tree);
   gtk_widget_show_all (GTK_WIDGET(content_area));
 }
 
@@ -348,8 +348,8 @@ open_class (char *class, GtkBox *content_area)
 
   select_area = gtk_hbox_new (FALSE, 0);
 
-  list_area = gtk_vbox_new (FALSE, 0);
-  show_list (GTK_BOX(list_area), list);
+  list_area = gtk_scrolled_window_new(NULL, NULL);
+  show_list (GTK_CONTAINER(list_area), list);
 
     {
       /*
@@ -405,7 +405,7 @@ show_name (GtkButton *button, gpointer func_data)
 
   List *list = (List *) callback_data[0];
   GtkWidget *label = (GtkWidget *) callback_data[1];
-  GtkBox *list_area = (GtkBox *) callback_data[2];
+  GtkContainer *list_area = (GtkContainer *) callback_data[2];
 
   gtk_label_set_text (GTK_LABEL(label),
 		      list_call_next (list));

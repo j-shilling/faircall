@@ -31,7 +31,6 @@ struct _ListNode
 
   char *name;
 
-  unsigned int max_index;
   unsigned int called;
   unsigned int slots;
 };
@@ -39,9 +38,13 @@ struct _ListNode
 struct _List
 {
   ListNode *first_node;
+  ListNode *last_node;
+  ListNode *last_called;
+
   char *class_name;
-  unsigned int max_index;
-  unsigned int last_called;
+
+  unsigned int total_slots;
+  unsigned int size;
 };
 
 struct _RandLimits
@@ -54,11 +57,11 @@ struct _RandLimits
  * STATIC FUNCTIONS DECLARATIONS                                        *
  ************************************************************************/
 
-static void
-list_node_free (ListNode *node);
+static ListNode *
+list_node_new ();
 
 static void
-list_set_indexes (List *list);
+list_node_free (ListNode *node);
 
 static ListNode *
 list_get_node (List *list, unsigned int index);

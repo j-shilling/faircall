@@ -32,7 +32,7 @@ void
 list_free (List *list);
 
 void
-list_add (List *list, char *name, unsigned int called, unsigned int slots);
+list_add (List *list, const char *name, unsigned int called, unsigned int slots);
 char *
 list_get_name (List *list, unsigned int index);
 char *

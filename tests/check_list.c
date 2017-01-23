@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <check.h>
 
+#include "stats.h"
+
 #include "../src/list.h"
 #include "../src/list-priv.h"
 
@@ -29,11 +31,10 @@ START_TEST (test_list_new)
 
       list = list_new ("class1");
 
-      ck_assert_ptr_ne (list, NULL);
-      ck_assert_ptr_eq (list->first_node, NULL);
+      ck_assert_ptr_ne(list, NULL);
+      ck_assert_ptr_eq(list->first_node, NULL);
 
-      ck_assert_int_eq (list->max_index, 0);
-      ck_assert_int_eq (list->last_called, 0);
+      ck_assert_int_eq(list->size, 0);
 
       list_free (list);
     }END_TEST
@@ -54,8 +55,7 @@ START_TEST (test_list_add)
       ck_assert_str_eq(cur->name, "one");
       ck_assert_int_eq(cur->called, 1);
       ck_assert_int_eq(cur->slots, 3);
-      ck_assert_ptr_eq(cur->prev, NULL);
-      ck_assert_int_eq(cur->max_index, 2);
+      ck_assert_ptr_ne(cur->prev, NULL);
 
       cur = cur->next;
 
@@ -64,7 +64,6 @@ START_TEST (test_list_add)
       ck_assert_int_eq(cur->called, 3);
       ck_assert_int_eq(cur->slots, 2);
       ck_assert_ptr_ne(cur->prev, NULL);
-      ck_assert_int_eq(cur->max_index, 4);
 
       cur = cur->next;
 
@@ -73,7 +72,6 @@ START_TEST (test_list_add)
       ck_assert_int_eq(cur->called, 2);
       ck_assert_int_eq(cur->slots, 4);
       ck_assert_ptr_ne(cur->prev, NULL);
-      ck_assert_int_eq(cur->max_index, 8);
 
       cur = cur->next;
 
@@ -82,7 +80,6 @@ START_TEST (test_list_add)
       ck_assert_int_eq(cur->called, 3);
       ck_assert_int_eq(cur->slots, 3);
       ck_assert_ptr_ne(cur->prev, NULL);
-      ck_assert_int_eq(cur->max_index, 11);
 
       cur = cur->next;
 
@@ -91,9 +88,7 @@ START_TEST (test_list_add)
       ck_assert_int_eq(cur->called, 2);
       ck_assert_int_eq(cur->slots, 1);
       ck_assert_ptr_ne(cur->prev, NULL);
-      ck_assert_int_eq(cur->max_index, 12);
 
-      ck_assert(cur->next == NULL);
     }END_TEST
 
 START_TEST(test_get_name)
@@ -106,25 +101,17 @@ START_TEST(test_get_name)
       list_add (list, "four", 3, 3);
       list_add (list, "five", 2, 1);
 
-      ck_assert_str_eq ("one", list_get_name (list, 0));
-      ck_assert_str_eq ("one", list_get_name (list, 1));
-      ck_assert_str_eq ("one", list_get_name (list, 2));
+      ck_assert_str_eq("one", list_get_name (list, 0));
 
-      ck_assert_str_eq ("two", list_get_name (list, 3));
-      ck_assert_str_eq ("two", list_get_name (list, 4));
+      ck_assert_str_eq("two", list_get_name (list, 1));
 
-      ck_assert_str_eq ("three", list_get_name (list, 5));
-      ck_assert_str_eq ("three", list_get_name (list, 6));
-      ck_assert_str_eq ("three", list_get_name (list, 7));
-      ck_assert_str_eq ("three", list_get_name (list, 8));
+      ck_assert_str_eq("three", list_get_name (list, 2));
 
-      ck_assert_str_eq ("four", list_get_name (list, 9));
-      ck_assert_str_eq ("four", list_get_name (list, 10));
-      ck_assert_str_eq ("four", list_get_name (list, 11));
+      ck_assert_str_eq("four", list_get_name (list, 3));
 
-      ck_assert_str_eq ("five", list_get_name (list, 12));
+      ck_assert_str_eq("five", list_get_name (list, 4));
 
-      ck_assert_ptr_eq (list_get_name(list, 112), NULL);
+      ck_assert_ptr_eq(list_get_name (list, 112), NULL);
 
       list_free (list);
     }END_TEST
@@ -140,10 +127,10 @@ START_TEST(test_get_times_called_on)
       list_add (list, "five", 2, 1);
 
       ck_assert_int_eq(1, list_get_times_called_on (list, 0));
+      ck_assert_int_eq(3, list_get_times_called_on (list, 1));
+      ck_assert_int_eq(2, list_get_times_called_on (list, 2));
       ck_assert_int_eq(3, list_get_times_called_on (list, 3));
-      ck_assert_int_eq(2, list_get_times_called_on (list, 5));
-      ck_assert_int_eq(3, list_get_times_called_on (list, 9));
-      ck_assert_int_eq(2, list_get_times_called_on (list, 12));
+      ck_assert_int_eq(2, list_get_times_called_on (list, 4));
 
       list_free (list);
     }END_TEST
@@ -156,7 +143,7 @@ START_TEST (test_call_next)
       /*
        * Build List of with nstudents
        */
-      ListNode *list = list_new ("class1");
+      List *list = list_new ("class1");
 
       for (int i = 0; i < nstudents; i++)
 	{
@@ -184,6 +171,77 @@ START_TEST (test_call_next)
 	}
     }END_TEST
 
+START_TEST(test_fairness)
+    {
+      const unsigned int nstudents = 25;
+      const unsigned int ntests = 100;
+
+      /*
+       * Build List of with nstudents
+       */
+      List *list = list_new ("class1");
+
+      for (int i = 0; i < nstudents; i++)
+	{
+	  char name[256];
+	  sprintf (name, "%i", i);
+
+	  list_add (list, name, 0, 1);
+	}
+
+      /*
+       * Run test ntests times
+       */
+
+      for (int i = 0; i < ntests; i++)
+	{
+	  list_call_next (list);
+	}
+
+      /*
+       * Check list stats
+       */
+
+      double vals[nstudents];
+
+      ListNode *node = list->first_node;
+      int i = 0;
+      for (int i = 0; i < list->size; i ++)
+	{
+	  vals[i] = (double) node->called;
+	  node = node->next;
+	}
+
+      double lower_bound = (lowq (vals, nstudents)
+	  - ((upq (vals, nstudents) - lowq (vals, nstudents)) * 1.5));
+      double upper_bound = (upq (vals, nstudents)
+	  + ((upq (vals, nstudents) - lowq (vals, nstudents)) * 1.5));
+
+      double high, low = -1;
+      for (int i = 0; i < nstudents; i++)
+	{
+	  if ((low < 0) || (low > vals[i]))
+	    low = vals[i];
+
+	  if (high < vals[i])
+	    high = vals[i];
+
+	  ck_assert_msg(((vals[i] <= upper_bound) || (vals[i] >= lower_bound)),
+			"%f is outside the outlier range: (%f, %f)\n", vals[i],
+			lower_bound, upper_bound);
+	}
+
+      double cov = coefficient_of_variance (vals, nstudents);
+
+      ck_assert_msg(cov < 1, "There is too much variance in this set: %f\n",
+		    cov);
+
+      printf ("mean: %f\n", mean (vals, nstudents));
+      printf ("standard deviation: %f\n", stdev (vals, nstudents));
+      printf ("median: %f\n", median (vals, nstudents));
+      printf ("range: %f\n", (high - low));
+    }END_TEST
+
 int
 main (void)
 {
@@ -201,6 +259,7 @@ main (void)
   tcase_add_test(tc_core, test_get_name);
   tcase_add_test(tc_core, test_get_times_called_on);
   tcase_add_test(tc_core, test_call_next);
+  tcase_add_test(tc_core, test_fairness);
   suite_add_tcase (s, tc_core);
 
   sr = srunner_create (s);
