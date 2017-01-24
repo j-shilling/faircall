@@ -30,10 +30,10 @@ typedef enum {
   NOSUCHCLASS = -6
 } io_err;
 
-extern io_err io_set_filename (char *name);
+extern io_err io_set_filename (const char *name);
 extern io_err io_save_list (List *list);
 extern io_err io_save_list_item (List *list, unsigned int index);
-extern List * io_load_list (char *class_name);
+extern List * io_load_list (const char *class_name);
 extern char **io_get_available_classes();
 
 #endif /* __IO_H__ */

@@ -32,6 +32,9 @@ void
 list_free (List *list);
 
 void
+list_set_last_called (List *list, const char *name);
+
+void
 list_add (List *list, const char *name, unsigned int called, unsigned int slots);
 char *
 list_get_name (List *list, unsigned int index);
@@ -41,7 +44,7 @@ unsigned int
 list_get_times_called_on (List * list, unsigned int index);
 double
 list_get_odds (List *list, unsigned int index);
-unsigned int
+char *
 list_get_last_called (List *list);
 unsigned int
 list_get_slots (List *list, unsigned int index);

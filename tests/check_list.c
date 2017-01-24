@@ -138,7 +138,7 @@ START_TEST(test_get_times_called_on)
 START_TEST (test_call_next)
     {
       const unsigned int nstudents = 25;
-      const unsigned int ntests = 100;
+      const unsigned int ntests = 1000;
 
       /*
        * Build List of with nstudents
@@ -173,8 +173,8 @@ START_TEST (test_call_next)
 
 START_TEST(test_fairness)
     {
-      const unsigned int nstudents = 25;
-      const unsigned int ntests = 100;
+      const unsigned int nstudents = 22;
+      const unsigned int ntests = 100000;
 
       /*
        * Build List of with nstudents
@@ -208,7 +208,7 @@ START_TEST(test_fairness)
       int i = 0;
       for (int i = 0; i < list->size; i ++)
 	{
-	  vals[i] = (double) node->called;
+	  vals[i] = node->called;
 	  node = node->next;
 	}
 

@@ -38,7 +38,7 @@
  ************************************************************************/
 
 io_err
-io_set_filename (char *name)
+io_set_filename (const char *name)
 {
   if (file)
     free (file);
@@ -84,9 +84,7 @@ io_save_list_item (List *list, unsigned int index)
       xmlNewProp (class_node, CALLED, "0");
     }
 
-  char *last_called = NULL;
-  asprintf (&last_called, "%d", list_get_last_called (list));
-  xmlSetProp (class_node, CALLED, last_called);
+  xmlSetProp (class_node, CALLED, list_get_last_called (list));
 
   save_item (list_get_name (list, index), index, FALSE,
 	     list_get_times_called_on (list, index),
@@ -125,9 +123,8 @@ io_save_list (List *list)
       xmlNewProp (class_node, CALLED, "0");
     }
 
-  char *last_called = NULL;
-  asprintf (&last_called, "%d", list_get_last_called (list));
-  xmlSetProp (class_node, CALLED, last_called);
+  char *last_called = list_get_last_called (list);
+  xmlSetProp (class_node, CALLED, last_called ? last_called : "");
 
   list_for_each (list, save_item, class_node);
 
@@ -138,7 +135,7 @@ io_save_list (List *list)
 }
 
 List *
-io_load_list (char *class_name)
+io_load_list (const char *class_name)
 {
   List *ret = NULL;
 
@@ -163,6 +160,8 @@ io_load_list (char *class_name)
 	      cur = cur->next;
 	    }
 	}
+
+      list_set_last_called (ret, xmlGetProp (class_node, CALLED));
 
       xmlFreeDoc (doc);
     }

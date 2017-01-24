@@ -80,6 +80,32 @@ list_free (List *list)
 /************************************************************************
  * LIST ACCESS FUNCTIONS                                                *
  ************************************************************************/
+void
+list_set_last_called (List *list, const char *name)
+{
+  if (strlen (name) == 0)
+    {
+      list->last_called = NULL;
+      return;
+    }
+
+  ListNode *node = list->first_node;
+  for (int i = 0; i < list->size; i++)
+    {
+      if (!node)
+	break;
+
+      if (!strcmp (name, node->name))
+	{
+	  list->last_called = node;
+	  return;
+	}
+
+      node = node->next;
+    }
+
+  list->last_called = NULL;
+}
 
 void
 list_add (List *list, const char *name, unsigned int called, unsigned int slots)
@@ -155,7 +181,9 @@ list_get_odds (List *list, unsigned int index)
   if (list->last_called == node)
     return 0.0;
 
-  unsigned int total = list->total_slots - list->last_called->slots;
+  unsigned int sub = list->last_called ?
+      list->last_called->slots : 0;
+  unsigned int total = list->total_slots - sub;
 
     return ((double) node->slots / (double) total);
 }
@@ -207,18 +235,13 @@ list_call_next (List *list)
     return item->name;
 }
 
-unsigned int
+char *
 list_get_last_called (List *list)
 {
-  unsigned int ret = 0;
-  ListNode *cur = list->first_node;
-  while (cur != list->last_called)
-    {
-    cur = cur->next;
-    ret++;
-    }
+  if (list->last_called)
+    return list->last_called->name;
 
-  return ret;
+  return NULL;
 }
 
 unsigned int
@@ -239,7 +262,7 @@ list_for_each (List *list, process_list_item func, void *data)
 
   unsigned int index = 0;
 
-  while (node)
+  for (int i = 0; i < list->size; i ++)
     {
       func (node->name,
 	    index, node == list->last_called,

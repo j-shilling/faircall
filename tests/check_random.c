@@ -22,7 +22,7 @@
 #include "stats.h"
 #include "../src/random.h"
 
-#define NVALS	1000000
+#define NVALS	1000
 
 START_TEST (test_get_rand_int)
 {
