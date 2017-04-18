@@ -27,6 +27,7 @@
 #include <signal.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <argp.h>
 
 #include <sys/stat.h>
 
@@ -36,40 +37,114 @@
 #include "list.h"
 #include "strdup.h"
 
-#include "config.h"
+#include "../config.h"
 
 /************************************************************************
- * MACROS FOR STRING CONSTANTS                                          *
+ * GLOBAL VARIABLES                                                     *
  ************************************************************************/
-#define ARGSTR    "?1mxa:f:i:d:"
+static List *list = NULL;
+static int exit_status = EXIT_SUCCESS;
+
+static struct {
+  int show_help;
+  int show_version;
+  int machine_readable;
+
+  int run_count;
+
+  char *class;
+} args = {
+    .show_help = 0,
+    .show_version = 0,
+    .machine_readable = 0,
+
+    .run_count = -1,
+
+    .class = NULL
+};
 
 /************************************************************************
- * EXTERNAL VARIABLES                                                   *
+ * CMD LINE OPTIONS                                                     *
  ************************************************************************/
-extern int errno;
 
-extern int optind;
-extern char *optarg;
+const char *argp_program_version = PACKAGE_STRING;
+const char *argp_program_bug_address = PACKAGE_BUGREPORT;
+
+static const char doc[] =
+    "faircall -- call on students fairly";
+static const char args_doc[] =
+    "[class name]";
+
+static struct argp_option options[] =
+      {
+	{ "machine", 'm', 0, 0, "Produce machine readable output" },
+	{ "count", 'c', "int", 0, "Call a certain number of names" },
+	{ "add", 'a', "name", 0,
+	    "Add a student to [class name]. Create the class if necessary" },
+	    { "import", 'f', "path/to/file", 0,
+		"Add all names in a file to [class name]. Create the class if necessary" },
+	    { "info", 'i', "name", OPTION_ARG_OPTIONAL,
+		"Show info for [name] in [class name]. If no name is given, show information for everyone in [class name]" },
+	    { "roster", 'r', "path/to/file", 0,
+		"Use the given file as the class roster" },
+	    { 0 } };
+
+static error_t
+parse_opt (int key, char *arg, struct argp_state *state)
+{
+  switch (key) {
+    case 'm':
+      args.machine_readable = 1;
+      break;
+
+    case 'c':
+      args.run_count = arg ? atoi (arg) : -1;
+      break;
+
+    case 'r':
+      io_set_filename (arg);
+      break;
+
+    case 'a':
+    case 'i':
+    case 'f':
+      break;
+
+    case ARGP_KEY_NO_ARGS:
+      argp_usage (state);
+      break;
+
+    case ARGP_KEY_ARG:
+      args.class = arg;
+      state->next = state->argc;
+      break;
+
+    default:
+      return ARGP_ERR_UNKNOWN;
+  }
+
+  return 0;
+}
+
+
+static struct argp argp = {
+    options, parse_opt, args_doc, doc
+};
 
 /************************************************************************
  * STATIC FUNCTIONS                                                     *
  ************************************************************************/
 
-static void on_kill (int sig);
-static List *get_list();
-static void usage();
+static void
+on_kill (int sig);
+static List *
+get_list ();
+static void
+usage ();
 
-static void print_stats (char *name, unsigned int index, bool is_last_called,
-				unsigned int called, unsigned int slots,
-				void *data);
-
-/************************************************************************
- * GLOBAL VARIABLES                                                     *
- ************************************************************************/
-List *list = NULL;
-char *class = NULL;
-
-bool machine = false;
+static void
+print_stats (char *name, unsigned int index, bool is_last_called,
+	     unsigned int called, unsigned int slots, void *data);
 
 /************************************************************************
  * MAIN FUNCTION                                                        *
@@ -78,160 +153,46 @@ int
 main (int argc, char** argv)
 {
 
-  bool run = true;
-  bool loop = true;
+  argp_parse (&argp, argc, argv, 0, 0, 0);
 
-  /*
-   * Check for args which need ot be processed first
-   */
-  int c;
-  while ( (c = getopt (argc, argv, ARGSTR)) != -1 )
+  if (args.run_count == 0)
+    exit (exit_status);
+
+  signal (SIGTERM, on_kill);
+  signal (SIGINT, on_kill);
+  signal (SIGQUIT, on_kill);
+  signal (SIGHUP, on_kill);
+
+  int count = 0;
+
+  while (1)
     {
-      switch (c)
-      {
-        case 'm':
-          machine = true;
-          continue;
+      if (args.run_count < 0)
+	{
+	  printf ("Press enter: ");
+	  getchar ();
+	}
 
-        case 'd':
-          io_set_filename (optarg);
-          continue;
+      char *name = list_call_next (get_list ());
 
-        case '1':
-          loop = false;
-          continue;
+      if (name == NULL)
+	{
+	  fprintf (stderr, "ERROR: list did not return a student.\n");
+	  return EXIT_FAILURE;
+	}
 
-        default:
-          continue;
-      }
-    } 
-  
-  if (optind < argc)
-    {
-      class = strdup(argv[optind]);
+      printf ("\n%s\n\n", name);
+
+      count++;
+
+      if (count >= args.run_count)
+	{
+	  on_kill (0);
+	}
+
     }
 
-  // Reset getopt
-  optind = 0;
-
-  /*
-   * Check for other args
-   */
-  while ( (c = getopt(argc, argv, ARGSTR)) != -1 )
-    {
-      switch (c)
-      {
-      case 'f':
-        {
-          FILE *file = fopen(optarg, "r");
-          char line[256];
-
-          if (!file)
-            {
-              fprintf(stderr, "WARNING: Could not open \"%s\" -- %s\n",
-                  optarg, strerror(errno));
-            }
-          else
-          {
-            while (fgets(line, sizeof(line), file))
-              {
-        	for (int i = 0; i < strlen (line); i++)
-        	    {
-        	      if (line[i] == '\n')
-        	        {
-        		  line[i] = '\0';
-        	          break;
-        	        }
-        	    }
-
-        	list_add (get_list(), line, 0, 1);
-        	io_save_list (get_list());
-              }
-            fclose(file);
-          }
-        }
-
-        run = false;
-        continue;
-
-      case 'a':
-        {
-          list_add (get_list(), optarg, 0, 1);
-          io_save_list(get_list());
-        }
-
-        run = false;
-        continue;
-
-      case 'i':
-	  if (class)
-	    {
-	      char *name = strdup(optarg);
-	      list_for_each (get_list(), print_stats, name);
-	      free (name);
-	    }
-	  else
-	    {
-	      class = strdup(optarg);
-
-	      list_for_each (get_list(), print_stats, NULL);
-	    }
-
-          run = false;
-          continue;
-
-      case '?':
-        usage();
-        return EXIT_SUCCESS;
-
-      case '1':
-        continue;
-
-      case 'm':
-        continue;
-
-      case 'd':
-        continue;
-
-      default:
-	usage();
-        return EXIT_FAILURE;
-    }
-  }
-
-
-  if (run)
-    {
-      signal (SIGTERM, on_kill);
-      signal (SIGINT, on_kill);
-      signal (SIGQUIT, on_kill);
-      signal (SIGHUP, on_kill);
-
-      do
-        {
-          if (loop)
-            {
-              printf ("Press enter: ");
-              getchar();
-            }
-      
-          char *name = list_call_next (get_list());
-
-          if (name == NULL)
-            {
-              fprintf (stderr, "ERROR: list did not return a student.\n");
-              return EXIT_FAILURE;
-            }
-
-          printf ("\n%s\n\n", name);
-
-        }
-      while (loop);
-
-      on_kill(0);
-    }
-
-  return EXIT_SUCCESS;
+  return exit_status;
 }
 
 /************************************************************************
@@ -241,25 +202,26 @@ main (int argc, char** argv)
 static void
 on_kill (int sig)
 {
-  io_save_list (get_list());
-  exit (EXIT_SUCCESS);
+  io_save_list (get_list ());
+  exit (exit_status);
 }
 
 static List *
-get_list () {
+get_list ()
+{
   if (!list)
     {
-      if (!class)
-            {
-              fprintf (stderr, "ERROR: no class name provided\n");
-              exit (EXIT_FAILURE);
-            }
+      if (!args.class)
+	{
+	  fprintf (stderr, "ERROR: no class name provided\n");
+	  exit (EXIT_FAILURE);
+	}
 
-      list = io_load_list(class);
+      list = io_load_list (args.class);
 
       if (!list)
 	{
-	  list = list_new(class);
+	  list = list_new (args.class);
 	}
     }
 
@@ -268,29 +230,27 @@ get_list () {
 
 static void
 print_stats (char *name, unsigned int index, bool is_last_called,
-				unsigned int called, unsigned int slots,
-				void *data)
+	     unsigned int called, unsigned int slots, void *data)
 {
-  double odds = list_get_odds (get_list(), index);
+  double odds = list_get_odds (get_list (), index);
   char *that = (char *) data;
 
   if (data)
     if (strcmp (name, that) != 0)
       return;
 
-  if (machine)
+  if (args.machine_readable)
     {
       printf ("%s:%d:%f\n", name, called, odds);
     }
   else
     {
-      printf ("%s\ncalled: %d\nodds: %3.2f%%\n",
-	      name, called, 100 * odds);
+      printf ("%s\ncalled: %d\nodds: %3.2f%%\n", name, called, 100 * odds);
     }
 }
 
 static void
-usage()
+usage ()
 {
   printf ("%s [mode] [class]\n", PACKAGE);
 }

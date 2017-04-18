@@ -15,6 +15,9 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#include <libxml/tree.h>
+
 #include "io.h"
 
 #define CLASS	"class"
@@ -27,7 +30,7 @@
 extern int errno;
 
 char *file = 0;
-const char *DOCNAME = "roster";
+const char *DOCNAME = "roaster";
 
 static char *
 get_doc_name ();
