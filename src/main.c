@@ -53,6 +53,9 @@ static struct {
   int run_count;
 
   char *class;
+
+  char **names_to_add;
+  char *stats_to_print;
 } args = {
     .show_help = 0,
     .show_version = 0,
@@ -60,8 +63,25 @@ static struct {
 
     .run_count = -1,
 
-    .class = NULL
+    .class = NULL,
+    .names_to_add = NULL,
+    .stats_to_print = NULL
 };
+
+/************************************************************************
+ * STATIC FUNCTIONS                                                     *
+ ************************************************************************/
+
+static void
+queue_name_to_add (char *name);
+static void
+on_kill (int sig);
+static List *
+get_list ();
+
+static void
+print_stats (char *name, unsigned int index, bool is_last_called,
+	     unsigned int called, unsigned int slots, void *data);
 
 /************************************************************************
  * CMD LINE OPTIONS                                                     *
@@ -83,7 +103,7 @@ static struct argp_option options[] =
 	    "Add a student to [class name]. Create the class if necessary" },
 	    { "import", 'f', "path/to/file", 0,
 		"Add all names in a file to [class name]. Create the class if necessary" },
-	    { "info", 'i', "name", OPTION_ARG_OPTIONAL,
+	    { "info", 'i', "name", 0,
 		"Show info for [name] in [class name]. If no name is given, show information for everyone in [class name]" },
 	    { "roster", 'r', "path/to/file", 0,
 		"Use the given file as the class roster" },
@@ -106,12 +126,58 @@ parse_opt (int key, char *arg, struct argp_state *state)
       break;
 
     case 'a':
+      {
+	queue_name_to_add (arg);
+      }
+
+      args.run_count = 0;
+      break;
+
     case 'i':
+      {
+	args.stats_to_print = arg;
+      }
+
+      args.run_count = 0;
+      break;
+
     case 'f':
+      {
+	FILE *file = fopen (arg, "r");
+	char line[256];
+
+	if (!file)
+	  {
+	    fprintf (stderr, "WARNING: Could not open \"%s\" -- %s\n",
+		     arg, strerror(errno));
+	  }
+	else
+	  {
+	    while (fgets (line, sizeof(line), file))
+	      {
+		for (int i = 0; i < strlen (line); i++)
+		  {
+		    if (line[i] == '\n')
+		      {
+			line[i] = '\0';
+			break;
+		      }
+		  }
+
+		queue_name_to_add (line);
+	      }
+
+	    fclose (file);
+	  }
+      }
+
+      args.run_count = 0;
       break;
 
     case ARGP_KEY_NO_ARGS:
-      argp_usage (state);
+      if (args.stats_to_print == NULL)
+	argp_usage (state);
+
       break;
 
     case ARGP_KEY_ARG:
@@ -132,21 +198,6 @@ static struct argp argp = {
 };
 
 /************************************************************************
- * STATIC FUNCTIONS                                                     *
- ************************************************************************/
-
-static void
-on_kill (int sig);
-static List *
-get_list ();
-static void
-usage ();
-
-static void
-print_stats (char *name, unsigned int index, bool is_last_called,
-	     unsigned int called, unsigned int slots, void *data);
-
-/************************************************************************
  * MAIN FUNCTION                                                        *
  ************************************************************************/
 int
@@ -154,6 +205,31 @@ main (int argc, char** argv)
 {
 
   argp_parse (&argp, argc, argv, 0, 0, 0);
+
+  if (args.names_to_add)
+      {
+        int i = 0;
+        while (args.names_to_add[i])
+  	{
+  	  list_add (get_list(), args.names_to_add[i], 0, 1);
+  	  i++;
+  	}
+
+        io_save_list (get_list());
+      }
+
+    if (args.stats_to_print)
+      {
+        if (args.class)
+  	{
+  	  list_for_each (get_list(), print_stats, args.stats_to_print);
+  	}
+        else
+  	{
+  	  args.class = args.stats_to_print;
+  	  list_for_each (get_list(), print_stats, NULL);
+  	}
+      }
 
   if (args.run_count == 0)
     exit (exit_status);
@@ -185,7 +261,7 @@ main (int argc, char** argv)
 
       count++;
 
-      if (count >= args.run_count)
+      if ((count >= args.run_count) && (args.run_count > 0))
 	{
 	  on_kill (0);
 	}
@@ -229,6 +305,33 @@ get_list ()
 }
 
 static void
+queue_name_to_add (char *name)
+{
+  if (!args.names_to_add) {
+      args.names_to_add = (char **) malloc (sizeof (char *));
+      args.names_to_add[0] = 0;
+  }
+
+  int length = 0;
+  while (args.names_to_add[length])
+    {
+      length++;
+    }
+
+  char ** new = (char **) malloc (sizeof (char *) * (length + 2));
+
+  for (int i = 0; i < length; i++) {
+      new[i] = args.names_to_add[i];
+  }
+
+  new[length] = strdup(name);
+  new[length+1] = 0;
+
+  free (args.names_to_add);
+  args.names_to_add = new;
+}
+
+static void
 print_stats (char *name, unsigned int index, bool is_last_called,
 	     unsigned int called, unsigned int slots, void *data)
 {
@@ -247,10 +350,4 @@ print_stats (char *name, unsigned int index, bool is_last_called,
     {
       printf ("%s\ncalled: %d\nodds: %3.2f%%\n", name, called, 100 * odds);
     }
-}
-
-static void
-usage ()
-{
-  printf ("%s [mode] [class]\n", PACKAGE);
 }

@@ -161,7 +161,10 @@ io_load_list (const char *class_name)
 	    }
 	}
 
-      list_set_last_called (ret, xmlGetProp (class_node, CALLED));
+      if (ret)
+	list_set_last_called (ret, xmlGetProp (class_node, CALLED));
+      else
+	ret = list_new (class_name);
 
       xmlFreeDoc (doc);
     }
