@@ -1,27 +1,12 @@
+SUBDIRS = shared
+
 bin_PROGRAMS = faircall gfaircall
-faircall_SOURCES = main.c \
-		 random.h \
-		 random.c \
-		 list.c \
-		 list.h \
-		 list-priv.h \
-		 io.c \
-		 io.h \
-		 io-priv.h \
-		 asprintf.h \
-		 strdup.h
-faircall_CFLAGS = $(XML_CFLAGS)
-faircall_LDADD= $(XML_LIBS) -lm
-gfaircall_SOURCES = gmain.c \
-		 random.h \
-		 random.c \
-		 list.c \
-		 list.h \
-		 list-priv.h \
-		 io.c \
-		 io.h \
-		 io-priv.h \
-		 asprintf.h \
-		 strdup.h
-gfaircall_CFLAGS = $(XML_CFLAGS) $(GTK_CFLAGS)
-gfaircall_LDADD= $(XML_LIBS) $(GTK_LIBS) -lm
+faircall_SOURCES = main.c
+faircall_CFLAGS = $(CFLAGS) -I$(srcdir)/shared
+faircall_LDADD = shared/libfaircall.a
+
+gfaircall_SOURCES = gmain.c
+gfaircall_CFLAGS = $(CFLAGS) -I$(srcdir)/shared
+gfaircall_LDADD = shared/libfaircall.a
+
+

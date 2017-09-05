@@ -1,17 +1,6 @@
-TESTS = check_list check_random
-check_PROGRAMS = check_list check_random
-check_list_SOURCES = check_list.c \
-					stats.c \
-					stats.h \
-		    		$(top_builddir)/src/list.c \
-		     		$(top_builddir)/src/random.c
-check_random_SOURCES = check_random.c \
-					stats.c \
-					stats.h \
-					$(top_builddir)/src/random.c
-
-check_list_CFLAGS = @CHECK_CFLAGS@
-check_random_CFLAGS = @CHECK_CFLAGS@
-
-check_list_LDADD = @CHECK_LIBS@
-check_random_LDADD = @CHECK_LIBS@ -lm
+TESTS = check_class
+check_PROGRAMS = check_class
+check_class_SOURCES = check_class.c
+check_class_CFLAGS = @CHECK_CFLAGS@ @GLIB_CFLAGS@ -I$(top_builddir)/src/shared
+check_class_LDADD = $(top_builddir)/src/shared/libfaircall.a \
+		    @GLIB_LIBS@ @XML_LIBS@ @CHECK_LIBS@

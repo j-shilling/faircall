@@ -2,10 +2,8 @@
 <!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
-  <object class="GtkWindow">
+  <template class="FaircallAppWindow" parent="GtkApplicationWindow">
     <property name="can_focus">False</property>
-    <property name="default_width">400</property>
-    <property name="default_height">500</property>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -172,26 +170,18 @@
           <object class="GtkPaned">
             <property name="visible">True</property>
             <property name="can_focus">True</property>
+            <property name="wide_handle">True</property>
             <child>
               <object class="GtkScrolledWindow">
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="shadow_type">in</property>
                 <child>
-                  <object class="GtkViewport">
-                    <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <child>
-                      <object class="GtkListBox">
-                        <property name="visible">True</property>
-                        <property name="can_focus">False</property>
-                      </object>
-                    </child>
-                  </object>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
-                <property name="resize">True</property>
+                <property name="resize">False</property>
                 <property name="shrink">True</property>
               </packing>
             </child>
@@ -201,18 +191,15 @@
                 <property name="can_focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkToolbar" id="toolbar">
+                  <object class="GtkToolbar">
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
-                    <property name="toolbar_style">text</property>
                     <child>
-                      <object class="GtkToolButton" id="call_button">
+                      <object class="GtkToolButton">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Call Next</property>
                         <property name="label" translatable="yes">Call Next</property>
                         <property name="use_underline">True</property>
-                        <accelerator key="Return" signal="clicked"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -220,13 +207,11 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="absent_button">
+                      <object class="GtkToolButton">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Absent</property>
-                        <property name="label" translatable="yes">Absent</property>
+                        <property name="label" translatable="yes">Mark Absent</property>
                         <property name="use_underline">True</property>
-                        <accelerator key="a" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -234,13 +219,11 @@
                       </packing>
                     </child>
                     <child>
-                      <object class="GtkToolButton" id="uncall_button">
+                      <object class="GtkToolButton">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="tooltip_text" translatable="yes">Uncall</property>
-                        <property name="label" translatable="yes">Undo Call</property>
+                        <property name="label" translatable="yes">Undo</property>
                         <property name="use_underline">True</property>
-                        <accelerator key="z" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -259,8 +242,9 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <property name="label" translatable="yes">label</property>
+                    <property name="justify">fill</property>
                     <attributes>
-                      <attribute name="font-desc" value="Century Schoolbook L Italic 19"/>
+                      <attribute name="font-desc" value="Century Schoolbook L Bold Italic 27"/>
                     </attributes>
                   </object>
                   <packing>
@@ -284,5 +268,5 @@
         </child>
       </object>
     </child>
-  </object>
+  </template>
 </interface>

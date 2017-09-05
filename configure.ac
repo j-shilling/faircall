@@ -7,18 +7,16 @@ AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_PROG_CC
-
-AX_CHECK_COMPILE_FLAG([-std=c11], [
-	CFLAGS+=" -std=c11"
-], [
-	echo "C compiler cannot compile C11 code"
-	exit -1
-])
+AC_PROG_RANLIB
+AM_PROG_AR
 
 # Checks for libraries.
 PKG_CHECK_MODULES([CHECK], [check >= 0.9.4])
-PKG_CHECK_MODULES(XML, libxml-2.0 >= 2.4)
+PKG_CHECK_MODULES([XML], [libxml-2.0 >= 2.4])
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.50.3])
 PKG_CHECK_MODULES([GTK], [gtk+-3.0])
+
+#AC_CHECK_LIB ([m], [sqrt])
 
 # Checks for header files.
 AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
@@ -30,9 +28,10 @@ AC_TYPE_SIZE_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
-AC_CHECK_FUNCS([mkdir sqrt asprintf strdup strerror])
+AC_CHECK_FUNCS([atexit mkdir sqrt asprintf strdup strerror])
 
 AC_CONFIG_FILES([Makefile
                  src/Makefile
+		 src/shared/Makefile
                  tests/Makefile])
 AC_OUTPUT
