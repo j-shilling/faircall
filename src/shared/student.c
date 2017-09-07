@@ -46,6 +46,9 @@ faircall_student_new (gchar const *const restrict name,
 void
 faircall_student_delete (gpointer data)
 {
+  if (!data)
+    return;
+
   struct Student *student = data;
 
   g_free (student->name);

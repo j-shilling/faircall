@@ -1,18 +1,12 @@
-#include "roster.h"
+#include "roster-priv.h"
+#include "roster.r"
+
+#include <string.h>
 #include <glib.h>
 
-struct Roster
-{
-  struct Student **arr;
-  gsize size;
-  guint nmemb;
 
-  GQueue *must_call;
-
-  GMutex m;
-};
-
-struct Roster *faircall_roster_new ()
+struct Roster *
+faircall_roster_new ()
 {
   struct Roster *ret = g_malloc (sizeof (struct Roster));
   ret->arr = NULL;
@@ -21,8 +15,53 @@ struct Roster *faircall_roster_new ()
   ret->must_call = g_queue_new();
 
   g_mutex_init (&ret->m);
+  return ret;
 }
 
+void
+faircall_roster_delete (struct Roster *const restrict self)
+{
+  if (!self)
+    return;
+
+  g_mutex_lock (&self->m);
+
+  for (int i = 0; i < self->size; i++)
+    faircall_student_delete (self->arr[i]);
+
+  g_free (self->arr);
+  g_queue_free (self->must_call);
+
+  g_mutex_unlock (&self->m);
+  g_mutex_clear (&self->m);
+  g_free (self);
+}
+
+gsize
+faircall_roster_length (struct Roster const *const self)
+{
+  if (!self)
+    return 0;
+
+  g_mutex_lock (&self->m);
+  gsize ret =  self->size;
+  g_mutex_unlock (&self->m);
+
+  return ret;
+}
+
+guint
+faircall_roster_could_call (struct Roster const *const self)
+{
+  if (!self)
+    return 0;
+
+  g_mutex_lock (&self->m);
+  gsize ret =  self->nmemb;
+  g_mutex_unlock (&self->m);
+
+  return ret;
+}
 void
 faircall_roster_add_student (struct Roster *const restrict self,
 				  struct Student const *const restrict student)
@@ -35,7 +74,7 @@ faircall_roster_add_student (struct Roster *const restrict self,
   struct Student **new = g_malloc0 (sizeof (struct Student *) * self->size);
 
   memcpy (new, self->arr, self->nmemb * sizeof (struct Student *));
-  new[self->nmemb] = student;
+  new[self->nmemb] = (struct Student *)student;
   self->nmemb ++;
 
   memcpy (new + (self->nmemb), self->arr + (self->nmemb - 1),
@@ -76,19 +115,66 @@ faircall_roster_set_must_call(struct Roster *const restrict self,
     return;
 
   g_mutex_lock (&self->m);
-  g_queue_push_tail (self->must_call, student);
+  g_queue_push_tail (self->must_call, (gpointer)student);
   g_mutex_unlock (&self->m);
 }
 
-void faircall_roster_set_may_call(struct Roster *const restrict self,
+void
+faircall_roster_set_may_call_anyone (struct Roster *const restrict self)
+{
+  if (!self)
+    return;
+
+  g_mutex_lock (&self->m);
+  self->nmemb = self->size;
+  g_mutex_unlock (&self->m);
+}
+
+void
+faircall_roster_set_cant_call_anyone (struct Roster *const restrict self)
+{
+  if (!self)
+    return;
+
+  g_mutex_lock (&self->m);
+  self->nmemb = 0;
+  g_mutex_unlock (&self->m);
+}
+void
+faircall_roster_set_may_call(struct Roster *const restrict self,
 				  struct Student const *const restrict student)
 {
   if (!self || !student)
     return;
 
   g_mutex_lock (&self->m);
+  for (int i = (self->size - 1); i >= 0; i--)
+    {
+      if (self->arr[i] == student)
+	{
+	  if (i < self->nmemb)
+	    goto cleanup;
+
+	  self->arr[i] = self->arr[self->nmemb];
+	  self->arr[self->nmemb] = (struct Student *)student;
+	  self->nmemb ++;
+
+	  goto cleanup;
+	}
+    }
+
+  struct Student **new = g_malloc ((1 + self->size) * sizeof (struct Student *));
+  memcpy (new, self->arr + 1, sizeof (struct Student *) * self->size);
+  g_free (self->arr);
+  self->arr = new;
+  self->arr[0] = (struct Student *)student;
+  self->size ++;
+  self->nmemb ++;
+  
+cleanup:
   g_mutex_unlock (&self->m);
 }
+
 void faircall_roster_set_cant_call(struct Roster *const restrict self,
 			  	   struct Student const *const restrict student)
 {
@@ -96,6 +182,103 @@ void faircall_roster_set_cant_call(struct Roster *const restrict self,
     return;
 
   g_mutex_lock (&self->m);
+  for (int i = 0; i < self->size; i ++)
+    {
+      if (self->arr[i] == student)
+	{
+	  if (i >= self->nmemb)
+	    goto cleanup;
+
+	  self->arr[i] = self->arr[self->nmemb - 1];
+	  self->arr[self->nmemb - 1] = (struct Student *)student;
+	  self->nmemb --;
+
+	  goto cleanup;
+	}
+    }
+
+  struct Student **new = g_malloc ((1 + self->size) * sizeof (struct Student *));
+  memcpy (new, self->arr, sizeof (struct Student *) * self->size);
+  g_free (self->arr);
+  self->arr[self->size] = (struct Student *)student;
+  self->size ++;
+
+cleanup:
   g_mutex_unlock (&self->m);
 }
 
+struct Student *
+faircall_roster_call_student (struct Roster const *const restrict self)
+{
+  if (!self)
+    {
+      g_warning ("faricall_roster_call_student given a null arg");
+      return NULL;
+    }
+
+  g_mutex_lock (&self->m);
+  struct Student *ret = NULL;
+
+  if (!g_queue_is_empty (self->must_call))
+    {
+      ret = g_queue_pop_head (self->must_call);
+      if (!ret)
+	g_warning ("Somehow a null pointer ended up in must_call");
+    }
+  else if (self->nmemb > 0)
+    {
+      ret = self->arr[g_random_int_range (0, self->nmemb)];
+      if (!ret)
+	g_warning ("Somehow self->arr has a null pointer.");
+    }
+  else
+    {
+      g_warning ("This roster has no one to call.");
+    }
+
+  g_mutex_unlock (&self->m);
+  return ret;
+}
+
+struct Student **
+faircall_roster_as_array (struct Roster const *const restrict self)
+{
+  if (!self)
+    return NULL;
+
+  g_mutex_lock (&self->m);
+  struct Student **ret = g_malloc ((self->size + 1) * sizeof (struct Student *));
+  memcpy (ret, self->arr, (self->size + 1) * sizeof (struct Student *));
+
+  ret[self->size] = 0;
+
+  g_mutex_unlock (&self->m);
+  return ret;
+}
+
+gboolean
+faircall_roster_is_student (struct Roster const *const restrict self,
+			    gchar const *const _name)
+{
+  if (!self || !_name)
+    return FALSE;
+
+  gchar const *const name =
+    g_utf8_normalize (_name, -1, G_NORMALIZE_DEFAULT);
+  gboolean ret = FALSE;
+
+  for (int i = 0; i < self->size; i++)
+    {
+      gchar const *const x =
+	g_utf8_normalize (self->arr[i]->name, -1, G_NORMALIZE_DEFAULT);
+      ret = (0 == g_strcmp0 (name, x));
+      g_free (x);
+
+      if (ret)
+	goto cleanup;
+    }
+
+cleanup:
+  g_free (name);
+  return ret;
+}

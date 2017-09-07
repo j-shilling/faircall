@@ -120,6 +120,22 @@ outliers (double *vals, int len)
   double min = q1 - (iqr * 1.5);
   double max = q3 + (iqr * 1.5);
 
+
+  if (min - max == 0)
+    {
+      min -= 2;
+      max += 2;
+    }
+  else if (min - max == 1)
+    {
+      min -= 1;
+      max += 1;
+    }
+  if (min < 0)
+    {
+      min += (min * -1);
+      max += (min * -1);
+    }
   int ret = 0;
 
   for (int i = 0; i < len; i++)

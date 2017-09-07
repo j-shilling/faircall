@@ -48,52 +48,6 @@ faircall_median (gdouble *vals, guint len)
     : vals[len / 2];
 }
 
-static void
-faircall_class_can_call (struct Class *const restrict class,
-			 struct Student const *const restrict student)
-{
-  if (!class || !student)
-    {
-      g_warning ("Cannot call faircall_class_can_call with null params "
-		 "{class = %p, student = %p}.",
-		 class, student);
-      return;
-    }
-
-  class->can_call = g_list_prepend (class->can_call, (gpointer)student);
-  class->can_call_length ++;
-}
-
-static void
-faircall_class_cant_call (struct Class *const restrict class,
-			 struct Student const *const restrict student)
-{
-  if (!class || !student)
-    {
-      g_warning ("Cannot call faircall_class_cant_call with null params "
-		 "{class = %p, student = %p}.",
-		 class, student);
-      return;
-    }
-
-  class->cant_call = g_list_prepend (class->cant_call, (gpointer)student);
-}
-
-static void
-faircall_class_must_call (struct Class *const restrict class,
-			 struct Student const *const restrict student)
-{
-  if (!class || !student)
-    {
-      g_warning ("Cannot call faircall_class_must_call with null params "
-		 "{class = %p, student = %p}.",
-		 class, student);
-      return;
-    }
-
-  g_queue_push_tail (class->must_call, (gpointer)student);
-}
-
 /* Passed to g_thread_new to update a class after
    a student has been called */
 static gpointer
@@ -108,135 +62,99 @@ faircall_update_class (gpointer data)
 
   struct Class *const class = data;
 
-  g_mutex_lock (&class->m);
   struct Student const *const student = class->last_called;
 
   /* Primary mode alows for any student to be called
      except for class->last called */
   if (!class->forced_even)
     {
-      // Remove anyone who couldn't be called before
-      class->can_call = g_list_concat (class->can_call, class->cant_call);
-      class->can_call_length += g_list_length (class->cant_call);
-      g_list_free (class->cant_call);
-      class->cant_call = NULL;
+      faircall_roster_set_may_call_anyone (class->r);
       // If there is only one student than we are done
-      if (class->can_call_length <= 1)
+      if (faircall_roster_length (class->r) <= 1)
 	goto cleanup;
 
       // Check fairness
-      gdouble *calls = g_malloc (sizeof (gdouble) * class->can_call_length);
-      guint i = 0;
-      for (GList *cur = class->can_call; cur != NULL; cur = cur->next)
-	{
-	  struct Student *item = cur->data;
-	  if (!item)
-	    {
-	      g_warning ("Somehow null data ended up in can_call");
-	      goto cleanup;
-	    }
+      struct Student **students = faircall_roster_as_array (class->r);
+      gsize len = faircall_roster_length (class->r);
 
+      gdouble *calls = g_malloc (sizeof (gdouble) * len);
+      for (int i = 0; i < len; i ++)
+	calls[i] = (gdouble) students[i]->called_on;
 
-	  calls[i] = (gdouble) item->called_on;
-	  i++;
-	}
-
-      qsort (calls, class->can_call_length,
+      qsort (calls, len,
 	     sizeof (gdouble), faircall_gdouble_cmp);
-      gdouble q1 = faircall_median (calls, class->can_call_length / 2);
-      gdouble q3 = (class->can_call_length % 2) == 0 ?
-	faircall_median (calls + (class->can_call_length / 2), class->can_call_length / 2)
-	: faircall_median (calls + ((class->can_call_length / 2) + 1), class->can_call_length / 2);
+      gdouble q1 = faircall_median (calls, len / 2);
+      gdouble q3 = (len % 2) == 0 ?
+	faircall_median (calls + (len / 2), len / 2)
+	: faircall_median (calls + ((len / 2) + 1), len / 2);
+      g_free (calls);
+
       gdouble iqr = q3 - q1;
-      gdouble min = q1 - (iqr * 1.5);
-      gdouble max = q3 - (iqr * 1.5);
+      gdouble min = q1 - (iqr * 0.5);
+      gdouble max = q3 - (iqr * 0.5);
+
+      min = min<0 ? 0 : min;
+      max = max<0 ? 0 : max;
 
       // student->called_on should try to fall between min and max
-      GList *cur = class->can_call;
-      while (cur)
+      for (int i = 0; i < (len >= 5 ? (len * .8) : len); i ++)
 	{
-	  struct Student *item = cur->data;
+	  struct Student *item = students[i];
 	  if (!item)
 	    {
-	      g_warning ("Somehow null data ended up in can_call");
+	      g_warning ("Somehow null data ended up in the roster");
 	      goto cleanup;
 	    }
+	  if (item == student)
+	    continue;
 
 	  guint called_on = item->called_on;
-	  if (called_on < min && cur->data != student)
+	  if (called_on < min)
 	    {
 	      // this student must be called
-	      faircall_class_must_call (class, cur->data);
-
-	      GList *temp = cur->next;
-	      class->can_call = g_list_remove_link (class->can_call, cur);
-	      class->can_call_length --;
-	      g_list_free_1 (cur);
-	      cur = temp;
+	      faircall_roster_set_must_call (class->r, item);
 	    }
 	  else if (called_on > max)
 	    {
 	      // this student must not be called
-	      faircall_class_cant_call (class, cur->data);
-
-	      GList *temp = cur->next;
-	      class->can_call = g_list_remove_link (class->can_call, cur);
-	      class->can_call_length --;
-	      g_list_free_1 (cur);
-	      cur = temp;
-	    }
-	  else
-	    {
-	      cur = cur->next;
+	      faircall_roster_set_cant_call (class->r, item);
 	    }
 	}
+
+      g_free (students);
+
+    if (faircall_roster_could_call (class->r) <= 1)
+	faircall_roster_set_may_call_anyone (class->r);
     }
 
   // Students should not be called twice in a row
   if (student)
-    {
-      GList *l = g_list_find (class->can_call, student);
-      if (l)
-	{
-	  class->can_call = g_list_remove_link (
-			      class->can_call,
-			      l);
-	  class->can_call_length --;
-	  faircall_class_cant_call (class, l->data);
-	  g_list_free_1 (l);
-	}
-    }
+    faircall_roster_set_cant_call (class->r, student);
 
   /* Secondary mode tries to ensure that all students are called
      an equal number of times. */
 
   // If we are out of students to call, repopulate the can_call list
-  if (class->forced_even
-      && class->can_call_length <= 1
-      && class->cant_call)
+  if (class->forced_even &&
+      faircall_roster_could_call (class->r) == 0)
     {
-      GList *list = NULL;
-      guint min =
-	((struct Student *)class->cant_call->data)->called_on;
-
-      for (GList *cur = class->cant_call; cur != NULL; cur = cur->next)
+      gsize len = faircall_roster_length (class->r);
+      struct Student **students = faircall_roster_as_array(class->r);
+      guint min = students[0] ? students[0]->called_on : 0;
+      faircall_roster_set_cant_call_anyone (class->r);
+      for (int i = 0; i < len; i++)
 	{
-	  if (((struct Student *)cur->data)->called_on < min) 
+	  if (students[i]->called_on < min)
 	    {
-	      min = ((struct Student *)cur->data)->called_on;
-	      g_list_free (list);
-	      list = g_list_prepend (NULL, cur->data);
+	      faircall_roster_set_cant_call_anyone (class->r);
+	      min = students[i]->called_on;
 	    }
-	  else if (((struct Student *)cur->data)->called_on == min)
-	    {
-	      list = g_list_prepend (list, cur->data);
-	    }
-	}
 
-      class->can_call = g_list_concat (class->can_call, list);
-      class->can_call_length += g_list_length (list);
-      g_list_free (list);
-    }
+	  if (students[i]->called_on == min)
+	    faircall_roster_set_may_call (class->r, students[i]);
+	}
+      g_free (students);
+   }
 
 cleanup:
   g_mutex_unlock (&class->m);
@@ -290,10 +208,7 @@ faircall_class_new (gchar const *const restrict name,
 
   ret->name = g_strdup (name);
   ret->forced_even = FALSE;
-  ret->can_call = NULL;
-  ret->can_call_length = 0;
-  ret->cant_call = NULL;
-  ret->must_call = g_queue_new();
+  ret->r = faircall_roster_new();
   ret->last_called = NULL;
 
   g_mutex_init (&ret->m);
@@ -309,9 +224,8 @@ faircall_class_delete (gpointer data)
   g_mutex_lock (&class->m); // don't free while class is being edited
 
   g_free (class->name);
-  g_list_free_full (class->can_call, faircall_student_delete);
-  g_list_free_full (class->cant_call, faircall_student_delete);
-  g_queue_free_full (class->must_call, faircall_student_delete);
+  faircall_roster_delete (class->r);
+  g_mutex_unlock (&class->m);
   g_mutex_clear (&class->m);
   g_free (class);
 }
@@ -329,12 +243,7 @@ faircall_class_add_student (struct Class *const restrict class,
       return;
     }
 
-  if (g_list_find_custom (class->can_call,
-			  student->name,
-			  faircall_find_student_by_name)
-      || g_list_find_custom (class->cant_call,
-			     student->name,
-			     faircall_find_student_by_name))
+  if (faircall_roster_is_student (class->r, student->name))
     {
       g_set_error (error,
 		   FAIRCALL_CLASS_ERROR,
@@ -345,7 +254,7 @@ faircall_class_add_student (struct Class *const restrict class,
     }
 
   g_mutex_lock (&class->m);
-  faircall_class_can_call (class, student);
+  faircall_roster_add_student (class->r, student);
   g_mutex_unlock (&class->m);
 }
 
@@ -387,48 +296,20 @@ faircall_class_call_student (struct Class *const restrict class)
     }
 
   g_mutex_lock (&class->m);
-  struct Student *ret = NULL;
-  // If there are students who must be called, call them
-  if (!g_queue_is_empty (class->must_call))
-    {
-      ret = g_queue_pop_head (class->must_call);
-    }
-  // Call a random student
-  else
-    {
-      if (class->can_call_length <= 0)
-	{
-	  g_warning ("We don't have anyone to call on.");
-	  goto cleanup;
-	}
+  struct Student *ret = faircall_roster_call_student (class->r);
 
-      gint32 i = g_random_int_range (0, class->can_call_length);
-      GList *node = g_list_nth (class->can_call, i);
-      if (!node)
-	{
-	  g_warning ("Somehow g_list_nth returned null. "
-		     "class->can_call_length = %d, i = %d, "
-		     "g_list_length(class->can_call) = %d",
-		     class->can_call_length, i, 
-		     g_list_length(class->can_call));
-	  goto cleanup;
-	}
-      ret = node->data;
-    }
-
-cleanup:
   if (ret)
     {
       ret->called_on ++;
       class->last_last_called = class->last_called;
       class->last_called = ret;
     }
-  g_mutex_unlock (&class->m);
 
   // Update the class in the background
   g_thread_new ("Update Class",
 		faircall_update_class,
 		class);
+
   return ret ? g_strdup (ret->name) : NULL;
 }
 
@@ -452,17 +333,14 @@ faircall_class_uncall_student (struct Class *const restrict class)
   struct Student *const student = class->last_called;
   student->called_on --;
 
-  GList *list = g_list_find (class->cant_call, student);
-  if (list)
-    {
-      class->cant_call = g_list_remove_link (class->cant_call, list);
-      g_list_free_1 (list);
-
-      faircall_class_can_call (class, student);
-    }
+  faircall_roster_set_may_call (class->r, student);
   class->last_called = class->last_last_called;
   class->last_last_called = NULL;
   g_mutex_unlock (&class->m);
+
+  g_thread_new ("Update Class",
+		faircall_update_class,
+		class);
 }
 
 /* If student is absent, undo call and remove them from the class */
@@ -479,22 +357,26 @@ faircall_class_absent_student (struct Class *const restrict class)
   struct Student *const student = class->last_called;
   student->called_on --;
 
-  GList *list = g_list_find (class->cant_call, student);
-  if (list)
-    {
-      class->cant_call = g_list_remove_link (class->cant_call, list);
-      g_list_free_1 (list);
-    }
-  list = g_list_find (class->can_call, student);
-  if (list)
-    {
-      class->can_call = g_list_remove_link (class->can_call, list);
-      class->can_call_length --;
-      g_list_free_1 (list);
-    }
-
-  faircall_student_delete (class->last_called);
+  faircall_roster_del_student (class->r, student);
   class->last_called = class->last_last_called;
   class->last_last_called = NULL;
   g_mutex_unlock (&class->m);
+
+  g_thread_new ("Update Class",
+		faircall_update_class,
+		class);
 }
+
+void
+faircall_class_set_forced_even (struct Class *const restrict class,
+				 gboolean const val)
+{
+  if (!class)
+    return;
+
+  g_mutex_lock (&class->m);
+  class->forced_even = val;
+  g_mutex_unlock (&class->m);
+}
+
+

@@ -21,5 +21,8 @@ void
 faircall_class_uncall_student (struct Class *const restrict class);
 void
 faircall_class_absent_student (struct Class *const restrict class);
+void
+faircall_class_set_forced_even (struct Class *const restrict class,
+				 gboolean const val);
 
 #endif /* __CLASS_H__ */

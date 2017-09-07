@@ -2,6 +2,7 @@
 #define __CLASS_PRIV_H__
 
 #include "error.h"
+#include "roster-priv.h"
 
 #include <glib.h>
 
@@ -12,11 +13,7 @@ struct Class
 
   GMutex m;
 
-  guint can_call_length;
-  GList *can_call;
-  GList *cant_call;
-  GQueue *must_call;
-
+  struct Roster *r;
   struct Student *last_called;
   struct Student *last_last_called;
 };

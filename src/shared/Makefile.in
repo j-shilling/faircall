@@ -105,7 +105,8 @@ am__v_AR_1 =
 libfaircall_a_AR = $(AR) $(ARFLAGS)
 libfaircall_a_LIBADD =
 am_libfaircall_a_OBJECTS = libfaircall_a-class.$(OBJEXT) \
-	libfaircall_a-io.$(OBJEXT) libfaircall_a-student.$(OBJEXT)
+	libfaircall_a-io.$(OBJEXT) libfaircall_a-student.$(OBJEXT) \
+	libfaircall_a-roster.$(OBJEXT)
 libfaircall_a_OBJECTS = $(am_libfaircall_a_OBJECTS)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
@@ -260,6 +261,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -271,7 +273,8 @@ top_srcdir = @top_srcdir@
 noinst_LIBRARIES = libfaircall.a
 libfaircall_a_SOURCES = class.c \
 			io.c \
-			student.c
+			student.c \
+			roster.c
 
 libfaircall_a_CFLAGS = $(XML_CFLAGS) $(GLIB_CFLAGS)
 all: all-am
@@ -324,6 +327,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-class.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-io.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-roster.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-student.Po@am__quote@
 
 .c.o:
@@ -383,6 +387,20 @@ libfaircall_a-student.obj: student.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='student.c' object='libfaircall_a-student.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-student.obj `if test -f 'student.c'; then $(CYGPATH_W) 'student.c'; else $(CYGPATH_W) '$(srcdir)/student.c'; fi`
+
+libfaircall_a-roster.o: roster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-roster.o -MD -MP -MF $(DEPDIR)/libfaircall_a-roster.Tpo -c -o libfaircall_a-roster.o `test -f 'roster.c' || echo '$(srcdir)/'`roster.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-roster.Tpo $(DEPDIR)/libfaircall_a-roster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='roster.c' object='libfaircall_a-roster.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-roster.o `test -f 'roster.c' || echo '$(srcdir)/'`roster.c
+
+libfaircall_a-roster.obj: roster.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-roster.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-roster.Tpo -c -o libfaircall_a-roster.obj `if test -f 'roster.c'; then $(CYGPATH_W) 'roster.c'; else $(CYGPATH_W) '$(srcdir)/roster.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-roster.Tpo $(DEPDIR)/libfaircall_a-roster.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='roster.c' object='libfaircall_a-roster.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-roster.obj `if test -f 'roster.c'; then $(CYGPATH_W) 'roster.c'; else $(CYGPATH_W) '$(srcdir)/roster.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
