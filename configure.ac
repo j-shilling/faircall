@@ -1,6 +1,6 @@
 AC_PREREQ([2.69])
 AC_INIT([faircall], [1.0], [shilling.jake@gmail.com])
-AM_INIT_AUTOMAKE([-Wall -Werror subdir-objects])
+AM_INIT_AUTOMAKE([-Wall  -Werror subdir-objects])
 
 AC_CONFIG_SRCDIR([config.h.in])
 AC_CONFIG_HEADERS([config.h])

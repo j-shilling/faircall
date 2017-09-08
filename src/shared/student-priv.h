@@ -3,12 +3,6 @@
 
 #include <glib.h>
 
-struct Student
-{
-  gchar *name;
-  guint called_on;
-};
-
 struct Student *
 faircall_student_new (gchar const *const restrict name,
 		      GError **error);

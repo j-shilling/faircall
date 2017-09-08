@@ -1,6 +1,11 @@
+#include "class.r"
 #include "class-priv.h"
+#include "student.r"
 #include "student-priv.h"
+#include "roster.r"
+#include "roster-priv.h"
 #include "io.h"
+#include "error.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -90,8 +95,8 @@ faircall_update_class (gpointer data)
       g_free (calls);
 
       gdouble iqr = q3 - q1;
-      gdouble min = q1 - (iqr * 0.5);
-      gdouble max = q3 - (iqr * 0.5);
+      gdouble min = q1 - (iqr * 1.5);
+      gdouble max = q3 + (iqr * 1.5);
 
       min = min<0 ? 0 : min;
       max = max<0 ? 0 : max;
@@ -336,7 +341,6 @@ faircall_class_uncall_student (struct Class *const restrict class)
   faircall_roster_set_may_call (class->r, student);
   class->last_called = class->last_last_called;
   class->last_last_called = NULL;
-  g_mutex_unlock (&class->m);
 
   g_thread_new ("Update Class",
 		faircall_update_class,
@@ -360,7 +364,6 @@ faircall_class_absent_student (struct Class *const restrict class)
   faircall_roster_del_student (class->r, student);
   class->last_called = class->last_last_called;
   class->last_last_called = NULL;
-  g_mutex_unlock (&class->m);
 
   g_thread_new ("Update Class",
 		faircall_update_class,
@@ -379,4 +382,77 @@ faircall_class_set_forced_even (struct Class *const restrict class,
   g_mutex_unlock (&class->m);
 }
 
+void
+faircall_class_del_student (struct Class *const restrict class,
+			    gchar const *const restrict name,
+			    GError **error)
+{
+  if (!class || !name)
+    {
+      g_warning ("Cannot call faircall_class_del_student with null parameters "
+		 "class = %p, name = %p", class, name);
+      return;
+    }
+
+  g_mutex_lock (&class->m);
+  struct Student **students = faircall_roster_as_array (class->r);
+  for (struct Student **cur = students; cur; cur++)
+    {
+      if (faircall_find_student_by_name (*cur, name) == 0)
+	{
+	  faircall_roster_del_student (class->r, *cur);
+	  break;
+	}
+    }
+
+  g_mutex_unlock (&class->m);
+  g_free (students);
+}
+
+gchar **
+faircall_class_call_n_students (struct Class *const restrict class,
+				guint const n,
+				GError **error)
+{
+  if (!class)
+    {
+      g_warning ("Cannot call faircall_class_call_n_students on a "
+		 "null class.");
+      return NULL;
+    }
+  if (n > faircall_roster_length(class->r))
+    {
+      g_set_error (error,
+		   FAIRCALL_CLASS_ERROR,
+		   NOT_ENOUGH_STUDENTS_ERROR,
+		   "Cannot call %u students from a class of %lu",
+		   n, faircall_roster_length(class->r));
+      return NULL;
+    }
+
+  g_mutex_lock (&class->m);
+  gchar **ret = g_malloc ((n + 1) * sizeof (gchar *));
+  for (int i = 0; i < n; i++)
+    {
+      struct Student *const restrict student =
+	faircall_roster_call_student (class->r);
+      if (!student)
+	{
+	  g_warning ("faircall_roster_call_student returned null.");
+	  i--;
+	  continue;
+	}	  
+
+      student->called_on++;
+      faircall_roster_set_cant_call (class->r, student);
+      ret[i] = g_strdup (student->name);
+    }
+  ret[n] = 0;
+
+  g_thread_new ("Update Class",
+		faircall_update_class,
+		class);
+
+  return ret;
+}
 

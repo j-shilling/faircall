@@ -1,5 +1,7 @@
-#include "class-priv.h"
-#include "student-priv.h"
+#include "class.r"
+#include "student.r"
+#include "roster.r"
+
 #include "error.h"
 
 #include <config.h>
@@ -23,18 +25,32 @@
 /* Local Error Domain and Codes */
 #define FAIRCALL_IO_ERROR faircall_io_error_quark()
 
+static gchar const *filename = NULL;
+
 static GQuark
 faircall_io_error_quark()
 {
   return g_quark_from_static_string ("faircall-io-error-quark");
 }
 
+static void
+cleanup (void)
+{
+  g_free ((gpointer) filename);
+}
+
 static const gchar *
 faircall_io_get_filename()
 {
-  return g_build_filename (g_get_user_config_dir(),
-			   PACKAGE,
-			   NULL); 
+  if (!filename)
+    {
+      filename = g_build_filename (g_get_user_config_dir(),
+				    PACKAGE,
+				    NULL); 
+      atexit (cleanup);
+    }
+
+  return filename;
 }
 
 static xmlDocPtr
@@ -58,7 +74,7 @@ faircall_io_open_doc (GError **error)
 		       FAIRCALL_IO_ERROR,
 		       g_file_error_from_errno (errno),
 		       "%s",
-		       strerror (errno));
+		       g_strerror (errno));
 	  return NULL;
 	}
     }
@@ -81,15 +97,11 @@ faircall_io_open_doc (GError **error)
 }
 
 static xmlNodePtr
-faircall_io_get_root (xmlDocPtr _doc, GError **error)
+faircall_io_get_root (xmlDocPtr doc, GError **error)
 {
-  GError *tmp_error = NULL;
-
-    xmlDocPtr doc = _doc ? _doc : faircall_io_open_doc (&tmp_error);
-
-  if (tmp_error)
+  if (!doc)
     {
-      g_propagate_error (error, tmp_error);
+      g_warning ("There is not root node of a null doc.");
       return NULL;
     }
 
@@ -103,9 +115,6 @@ faircall_io_get_root (xmlDocPtr _doc, GError **error)
 
     }
 
-  if (!_doc && doc)
-    xmlFreeDoc (doc);
-
   return root;
 }
 
@@ -114,6 +123,26 @@ faircall_io_is_class (gchar const *const restrict name,
 		      GError **error)
 {
   return FALSE;
+}
+
+struct Class *
+faircall_io_get_class (gchar const *const restrict name,
+		       GError **error)
+{
+  return NULL;
+}
+
+gboolean
+faircall_io_save_class (struct Class const *const class,
+		      GError **error)
+{
+  return FALSE;
+}
+
+gchar **
+faircall_io_saved_classes (GError **error)
+{
+  return NULL;
 }
 
 

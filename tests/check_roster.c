@@ -1,5 +1,7 @@
 #include <check.h>
 #include <stdlib.h>
+#include <stdio.h>
+
 #include "../src/shared/roster-priv.h"
 #include "../src/shared/roster.r"
 

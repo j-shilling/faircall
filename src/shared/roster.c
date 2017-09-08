@@ -1,3 +1,4 @@
+#include "student.r"
 #include "roster-priv.h"
 #include "roster.r"
 
@@ -43,9 +44,9 @@ faircall_roster_length (struct Roster const *const self)
   if (!self)
     return 0;
 
-  g_mutex_lock (&self->m);
+  g_mutex_lock ((GMutex *)&self->m);
   gsize ret =  self->size;
-  g_mutex_unlock (&self->m);
+  g_mutex_unlock ((GMutex *)&self->m);
 
   return ret;
 }
@@ -56,9 +57,9 @@ faircall_roster_could_call (struct Roster const *const self)
   if (!self)
     return 0;
 
-  g_mutex_lock (&self->m);
+  g_mutex_lock ((GMutex *)&self->m);
   gsize ret =  self->nmemb;
-  g_mutex_unlock (&self->m);
+  g_mutex_unlock ((GMutex *)&self->m);
 
   return ret;
 }
@@ -216,7 +217,7 @@ faircall_roster_call_student (struct Roster const *const restrict self)
       return NULL;
     }
 
-  g_mutex_lock (&self->m);
+  g_mutex_lock ((GMutex *)&self->m);
   struct Student *ret = NULL;
 
   if (!g_queue_is_empty (self->must_call))
@@ -236,7 +237,7 @@ faircall_roster_call_student (struct Roster const *const restrict self)
       g_warning ("This roster has no one to call.");
     }
 
-  g_mutex_unlock (&self->m);
+  g_mutex_unlock ((GMutex *)&self->m);
   return ret;
 }
 
@@ -246,13 +247,13 @@ faircall_roster_as_array (struct Roster const *const restrict self)
   if (!self)
     return NULL;
 
-  g_mutex_lock (&self->m);
+  g_mutex_lock ((GMutex *)&self->m);
   struct Student **ret = g_malloc ((self->size + 1) * sizeof (struct Student *));
   memcpy (ret, self->arr, (self->size + 1) * sizeof (struct Student *));
 
   ret[self->size] = 0;
 
-  g_mutex_unlock (&self->m);
+  g_mutex_unlock ((GMutex *)&self->m);
   return ret;
 }
 
@@ -272,13 +273,13 @@ faircall_roster_is_student (struct Roster const *const restrict self,
       gchar const *const x =
 	g_utf8_normalize (self->arr[i]->name, -1, G_NORMALIZE_DEFAULT);
       ret = (0 == g_strcmp0 (name, x));
-      g_free (x);
+      g_free ((gpointer)x);
 
       if (ret)
 	goto cleanup;
     }
 
 cleanup:
-  g_free (name);
+  g_free ((gpointer)name);
   return ret;
 }

@@ -1,6 +1,6 @@
-libfaircall_a-student.o: student.c /usr/include/stdc-predef.h \
- student-priv.h /usr/include/glib-2.0/glib.h \
- /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
+libfaircall_a-student.o: student.c /usr/include/stdc-predef.h student.r \
+ /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
+ /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
  /usr/lib/gcc/x86_64-linux-gnu/6/include/stddef.h \
@@ -98,11 +98,11 @@ libfaircall_a-student.o: student.c /usr/include/stdc-predef.h \
  /usr/include/x86_64-linux-gnu/sys/sysmacros.h /usr/include/pthread.h \
  /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/glib-2.0/glib/glib-autocleanups.h error.h
+ /usr/include/glib-2.0/glib/glib-autocleanups.h student-priv.h error.h
 
 /usr/include/stdc-predef.h:
 
-student-priv.h:
+student.r:
 
 /usr/include/glib-2.0/glib.h:
 
@@ -347,5 +347,7 @@ student-priv.h:
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
 
 /usr/include/glib-2.0/glib/glib-autocleanups.h:
+
+student-priv.h:
 
 error.h:

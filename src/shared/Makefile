@@ -106,7 +106,8 @@ libfaircall_a_AR = $(AR) $(ARFLAGS)
 libfaircall_a_LIBADD =
 am_libfaircall_a_OBJECTS = libfaircall_a-class.$(OBJEXT) \
 	libfaircall_a-io.$(OBJEXT) libfaircall_a-student.$(OBJEXT) \
-	libfaircall_a-roster.$(OBJEXT)
+	libfaircall_a-roster.$(OBJEXT) \
+	libfaircall_a-faircall.$(OBJEXT)
 libfaircall_a_OBJECTS = $(am_libfaircall_a_OBJECTS)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
@@ -274,7 +275,8 @@ noinst_LIBRARIES = libfaircall.a
 libfaircall_a_SOURCES = class.c \
 			io.c \
 			student.c \
-			roster.c
+			roster.c \
+			faircall.c
 
 libfaircall_a_CFLAGS = $(XML_CFLAGS) $(GLIB_CFLAGS)
 all: all-am
@@ -326,6 +328,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ./$(DEPDIR)/libfaircall_a-class.Po
+include ./$(DEPDIR)/libfaircall_a-faircall.Po
 include ./$(DEPDIR)/libfaircall_a-io.Po
 include ./$(DEPDIR)/libfaircall_a-roster.Po
 include ./$(DEPDIR)/libfaircall_a-student.Po
@@ -401,6 +404,20 @@ libfaircall_a-roster.obj: roster.c
 #	$(AM_V_CC)source='roster.c' object='libfaircall_a-roster.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-roster.obj `if test -f 'roster.c'; then $(CYGPATH_W) 'roster.c'; else $(CYGPATH_W) '$(srcdir)/roster.c'; fi`
+
+libfaircall_a-faircall.o: faircall.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-faircall.o -MD -MP -MF $(DEPDIR)/libfaircall_a-faircall.Tpo -c -o libfaircall_a-faircall.o `test -f 'faircall.c' || echo '$(srcdir)/'`faircall.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-faircall.Tpo $(DEPDIR)/libfaircall_a-faircall.Po
+#	$(AM_V_CC)source='faircall.c' object='libfaircall_a-faircall.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-faircall.o `test -f 'faircall.c' || echo '$(srcdir)/'`faircall.c
+
+libfaircall_a-faircall.obj: faircall.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-faircall.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-faircall.Tpo -c -o libfaircall_a-faircall.obj `if test -f 'faircall.c'; then $(CYGPATH_W) 'faircall.c'; else $(CYGPATH_W) '$(srcdir)/faircall.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-faircall.Tpo $(DEPDIR)/libfaircall_a-faircall.Po
+#	$(AM_V_CC)source='faircall.c' object='libfaircall_a-faircall.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-faircall.obj `if test -f 'faircall.c'; then $(CYGPATH_W) 'faircall.c'; else $(CYGPATH_W) '$(srcdir)/faircall.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique

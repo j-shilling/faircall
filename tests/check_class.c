@@ -6,6 +6,7 @@
 
 #include "../src/shared/student-priv.h"
 #include "../src/shared/class-priv.h"
+#include "../src/shared/class.h"
 #include "../src/shared/roster-priv.h"
 #include "stats.h"
 

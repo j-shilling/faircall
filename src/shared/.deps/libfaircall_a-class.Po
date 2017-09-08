@@ -1,6 +1,6 @@
-libfaircall_a-class.o: class.c /usr/include/stdc-predef.h class-priv.h \
- error.h roster-priv.h student-priv.h /usr/include/glib-2.0/glib.h \
- /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
+libfaircall_a-class.o: class.c /usr/include/stdc-predef.h class.r \
+ /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
+ /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
  /usr/lib/gcc/x86_64-linux-gnu/6/include/stddef.h \
@@ -98,8 +98,9 @@ libfaircall_a-class.o: class.c /usr/include/stdc-predef.h class-priv.h \
  /usr/include/x86_64-linux-gnu/sys/sysmacros.h /usr/include/pthread.h \
  /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/glib-2.0/glib/glib-autocleanups.h io.h \
- /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
+ /usr/include/glib-2.0/glib/glib-autocleanups.h class-priv.h student.r \
+ student-priv.h roster.r roster-priv.h io.h error.h /usr/include/stdlib.h \
+ /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/alloca.h \
  /usr/include/x86_64-linux-gnu/bits/stdlib-float.h /usr/include/math.h \
  /usr/include/x86_64-linux-gnu/bits/math-vector.h \
@@ -114,13 +115,7 @@ libfaircall_a-class.o: class.c /usr/include/stdc-predef.h class-priv.h \
 
 /usr/include/stdc-predef.h:
 
-class-priv.h:
-
-error.h:
-
-roster-priv.h:
-
-student-priv.h:
+class.r:
 
 /usr/include/glib-2.0/glib.h:
 
@@ -366,7 +361,19 @@ student-priv.h:
 
 /usr/include/glib-2.0/glib/glib-autocleanups.h:
 
+class-priv.h:
+
+student.r:
+
+student-priv.h:
+
+roster.r:
+
+roster-priv.h:
+
 io.h:
+
+error.h:
 
 /usr/include/stdlib.h:
 

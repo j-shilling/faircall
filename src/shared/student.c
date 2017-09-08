@@ -1,3 +1,4 @@
+#include "student.r"
 #include "student-priv.h"
 #include "error.h"
 

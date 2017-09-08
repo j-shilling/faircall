@@ -1,6 +1,6 @@
-libfaircall_a-io.o: io.c /usr/include/stdc-predef.h class-priv.h error.h \
- roster-priv.h student-priv.h /usr/include/glib-2.0/glib.h \
- /usr/include/glib-2.0/glib/galloca.h /usr/include/glib-2.0/glib/gtypes.h \
+libfaircall_a-io.o: io.c /usr/include/stdc-predef.h class.r \
+ /usr/include/glib-2.0/glib.h /usr/include/glib-2.0/glib/galloca.h \
+ /usr/include/glib-2.0/glib/gtypes.h \
  /usr/lib/x86_64-linux-gnu/glib-2.0/include/glibconfig.h \
  /usr/include/glib-2.0/glib/gmacros.h \
  /usr/lib/gcc/x86_64-linux-gnu/6/include/stddef.h \
@@ -98,9 +98,10 @@ libfaircall_a-io.o: io.c /usr/include/stdc-predef.h class-priv.h error.h \
  /usr/include/x86_64-linux-gnu/sys/sysmacros.h /usr/include/pthread.h \
  /usr/include/sched.h /usr/include/x86_64-linux-gnu/bits/sched.h \
  /usr/include/x86_64-linux-gnu/bits/setjmp.h \
- /usr/include/glib-2.0/glib/glib-autocleanups.h ../../config.h \
- /usr/include/errno.h /usr/include/x86_64-linux-gnu/bits/errno.h \
- /usr/include/linux/errno.h /usr/include/x86_64-linux-gnu/asm/errno.h \
+ /usr/include/glib-2.0/glib/glib-autocleanups.h student.r roster.r \
+ error.h ../../config.h /usr/include/errno.h \
+ /usr/include/x86_64-linux-gnu/bits/errno.h /usr/include/linux/errno.h \
+ /usr/include/x86_64-linux-gnu/asm/errno.h \
  /usr/include/asm-generic/errno.h /usr/include/asm-generic/errno-base.h \
  /usr/include/stdlib.h /usr/include/x86_64-linux-gnu/bits/waitflags.h \
  /usr/include/x86_64-linux-gnu/bits/waitstatus.h /usr/include/alloca.h \
@@ -142,13 +143,7 @@ libfaircall_a-io.o: io.c /usr/include/stdc-predef.h class-priv.h error.h \
 
 /usr/include/stdc-predef.h:
 
-class-priv.h:
-
-error.h:
-
-roster-priv.h:
-
-student-priv.h:
+class.r:
 
 /usr/include/glib-2.0/glib.h:
 
@@ -393,6 +388,12 @@ student-priv.h:
 /usr/include/x86_64-linux-gnu/bits/setjmp.h:
 
 /usr/include/glib-2.0/glib/glib-autocleanups.h:
+
+student.r:
+
+roster.r:
+
+error.h:
 
 ../../config.h:
 
