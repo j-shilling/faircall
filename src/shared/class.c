@@ -55,8 +55,8 @@ faircall_median (gdouble *vals, guint len)
 
 /* Passed to g_thread_new to update a class after
    a student has been called */
-static gpointer
-faircall_update_class (gpointer data)
+gpointer
+faircall_class_update (gpointer data)
 {
   if (!data)
     {
@@ -66,6 +66,7 @@ faircall_update_class (gpointer data)
     }
 
   struct Class *const class = data;
+  g_mutex_trylock (&class->m);
 
   struct Student const *const student = class->last_called;
 
@@ -312,7 +313,7 @@ faircall_class_call_student (struct Class *const restrict class)
 
   // Update the class in the background
   g_thread_new ("Update Class",
-		faircall_update_class,
+		faircall_class_update,
 		class);
 
   return ret ? g_strdup (ret->name) : NULL;
@@ -343,7 +344,7 @@ faircall_class_uncall_student (struct Class *const restrict class)
   class->last_last_called = NULL;
 
   g_thread_new ("Update Class",
-		faircall_update_class,
+		faircall_class_update,
 		class);
 }
 
@@ -366,7 +367,7 @@ faircall_class_absent_student (struct Class *const restrict class)
   class->last_last_called = NULL;
 
   g_thread_new ("Update Class",
-		faircall_update_class,
+		faircall_class_update,
 		class);
 }
 
@@ -450,7 +451,7 @@ faircall_class_call_n_students (struct Class *const restrict class,
   ret[n] = 0;
 
   g_thread_new ("Update Class",
-		faircall_update_class,
+		faircall_class_update,
 		class);
 
   return ret;

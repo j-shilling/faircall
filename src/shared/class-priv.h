@@ -30,5 +30,7 @@ gchar **
 faircall_class_call_n_students (struct Class *const restrict class,
 				guint const n,
 				GError **error);
+gpointer
+faircall_class_update (gpointer data);
 
 #endif /* __CLASS_H__ */
