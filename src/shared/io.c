@@ -724,7 +724,9 @@ faircall_io_saved_classes (GError **error)
 	  xmlChar *name = xmlGetProp (cur, NAME);
 	  if (name)
 	    {
-	      ret[i] = (gchar *) name;
+	      ret[i] = g_strdup_printf ("%s\n",
+					(gchar *) name);
+	      xmlFree (name);
 	      i++;
 	    }
 	}

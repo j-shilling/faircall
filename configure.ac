@@ -18,8 +18,6 @@ PKG_CHECK_MODULES([XML], [libxml-2.0 >= 2.4])
 PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.50.3])
 PKG_CHECK_MODULES([GTK], [gtk+-3.0])
 
-#AC_CHECK_LIB ([m], [sqrt])
-
 # Checks for header files.
 AC_CHECK_HEADERS([limits.h stdlib.h string.h unistd.h])
 

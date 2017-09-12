@@ -2,13 +2,16 @@
 
 #include "class.r"
 #include "student.r"
+#include "roster.r"
 #include "class-priv.h"
 #include "roster-priv.h"
 #include "io.h"
 #include "error.h"
 
+#include <stdlib.h>
+#include <string.h>
+
 gboolean faircall_open_class (gchar const *const name,
-			      gboolean *const restrict new,
 			      GError **error);gboolean faircall_close_class (GError **error);
 gboolean faircall_add_student (gchar const *const name, GError **error);
 gboolean faircall_del_student (gchar const *const name, GError **error);
@@ -20,6 +23,7 @@ gchar *  faircall_call_student (GError **error);
 gchar ** faircall_call_n_students (guint n, GError **error);
 
 gchar ** faircall_info (GError **error);
+gchar *  faircall_get_open_class_name(void);
 
 static struct Class *class = NULL;
 
@@ -31,9 +35,23 @@ faircall_error_quark()
   return g_quark_from_static_string ("faircall-error-quark");
 }
 
+static int
+faircall_strcmp (const void *_str1, const void *_str2)
+{
+  gchar *str1 =
+    _str1 ? g_utf8_normalize ((gchar *)_str1, -1, G_NORMALIZE_DEFAULT) : NULL;
+  gchar *str2 =
+    _str2 ? g_utf8_normalize ((gchar *)_str2, -1, G_NORMALIZE_DEFAULT) : NULL;
+
+  int ret = g_strcmp0 (str1, str2);
+  g_free (str1);
+  g_free (str2);
+
+  return ret;
+}
+
 gboolean
 faircall_open_class (gchar const *const name,
-		     gboolean *const restrict new,
 		     GError **error)
 {
   GError *tmp_error = NULL;
@@ -47,7 +65,6 @@ faircall_open_class (gchar const *const name,
 	}
     }
 
-  *new = FALSE;
   if (!faircall_io_is_class (name, &tmp_error))
     {
       if (!tmp_error)
@@ -59,7 +76,6 @@ faircall_open_class (gchar const *const name,
 	  return FALSE;
 	}
 
-      *new = TRUE;
       return TRUE;
     }
  
@@ -232,10 +248,61 @@ faircall_set_forced_even (gboolean const value, GError **error)
       g_set_error (error,
 		   FAIRCALL_ERROR,
 		   NO_OPEN_CLASS_ERROR,
-		   "There is not class to delete from.");
+		   "There is no class edit.");
       return FALSE;
     }
 
   faircall_class_set_forced_even (class, value);
   return TRUE;
+}
+
+gboolean
+faircall_call_student_by_name (gchar const *const restrict name,
+			       GError **error)
+{
+  if (!class)
+    {
+      g_set_error (error,
+		   FAIRCALL_ERROR,
+		   NO_OPEN_CLASS_ERROR,
+		   "There is no class call from.");
+      return FALSE;
+    }
+
+  struct Roster *r = class->r;
+  for (int i = 0; i < r->size; i++)
+    {
+      if (r->arr[i] && g_strcmp0 (name, r->arr[i]->name) == 0)
+	{
+	  r->arr[i]->called_on ++;
+	  return TRUE;
+	}
+    }
+
+  g_set_error (error,
+	       FAIRCALL_ERROR,
+	       NO_SUCH_NAME_ERROR,
+	       "There is no \"%s\" in class \"%s\"",
+	       name, class->name);
+  return FALSE;
+}
+
+gchar **
+faircall_list (GError **error)
+{
+  if (!class)
+    return faircall_io_saved_classes (error);
+
+  gchar **ret = g_malloc0 (sizeof (char *) * (class->r->size + 1));
+  memcpy (ret, class->r->arr, class->r->size);
+
+  qsort (ret, class->r->size, class->r->size, faircall_strcmp);
+
+  return ret;
+}
+
+gchar *
+faircall_get_open_class_name(void)
+{
+  return class ? class->name : "";
 }
