@@ -23,6 +23,7 @@ CLOSE	"c"|"close"
 UNDO	"z"|"undo"
 ABSENT	"a"|"absent"
 EVEN	"e"|"even"
+CALL	"call"
 HELP	"h"|"help"
 QUIT	"q"|"quit"
 
@@ -37,6 +38,7 @@ QUIT	"q"|"quit"
 {UNDO}		return UNDO;
 {ABSENT}	return ABSENT;
 {EVEN}		return EVEN;
+{CALL}		return CALL;
 {HELP}		return HELP;
 {QUIT}		return QUIT;
 

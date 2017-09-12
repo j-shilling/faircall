@@ -53,8 +53,7 @@ open:
 		}
 ;
 
-add:
-   ADD NAME	{
+add: ADD NAME	{
 		  GError *error = NULL;
 		  if (!faircall_add_student ($<string>2, &error))
 		    {

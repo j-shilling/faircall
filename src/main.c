@@ -5,7 +5,17 @@
 #include <glib.h>
 #include <glib/gprintf.h>
 
+#include <readline/readline.h>
+#include <readline/history.h>
+
 #include <shared/faircall.h>
+#include <parser.h>
+#include <config.h>
+
+struct yy_buffer_state;
+typedef struct yy_buffer_state *YY_BUFFER_STATE;
+YY_BUFFER_STATE yy_scan_string(const char *);
+void yy_delete_buffer( YY_BUFFER_STATE buffer );
 
 static gchar **names_to_add = NULL;
 static gchar **names_to_del = NULL;
@@ -134,65 +144,17 @@ main (int argc, char *argv[])
 
   while (TRUE)
     {
-      g_printf ("\nPress enter for next name or quit [q], undo [z], absent [a]: ");
-      gchar c = getchar ();
+      static gchar const *const call = "call";
 
-      switch (c)
-	{
-	  case 'q':
-	  case 'Q':  
-	      {
-		exit (EXIT_SUCCESS);
-		break;
-	      }
+      gchar *input = readline (PACKAGE ") ");
+      if (input && *input)
+	add_history (input);
 
-	  case 'z':
-	  case 'Z':  
-	      {
-		if (!faircall_undo_call (&error))
-		  g_printf ("Error undoing call. %s\n", error ? error->message : "");
-		error = NULL;
-		while (getchar() != '\n');
-		break;
-	      }
+      void *buf = yy_scan_string ((input && *input) ? input : call);
+      yyparse();
 
-	  case 'a':
-	  case 'A':  
-	      {
-		if (!faircall_mark_absent (&error))
-		  g_printf ("Error marking absence. %s\n",
-			    error ? error->message : "");
-		error = NULL;
-		while (getchar() != '\n');
-		break;
-	      }
-	  case 'i':
-	  case 'I':
-	      {
-		showinfo();
-		while (getchar() != '\n');
-		break;
-	      }
-
-	  default:   
-	      {
-		gchar *name = faircall_call_student (&error);
-		if (error)
-		  {
-		    g_printf ("Error calling student: %s\n",
-			      error->message);
-		    error = NULL;
-		  }
-		if (!name)
-		  g_printf ("Could not call student.\n");
-		else
-		  g_printf ("%s\n", name);
-
-		if (name)
-		  g_free (name);
-		break;
-	      }
-	}
+      yy_delete_buffer (buf);
+      g_free (input);
     }
 }
 

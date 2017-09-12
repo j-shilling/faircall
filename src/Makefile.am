@@ -8,7 +8,7 @@ faircall_SOURCES = main.c \
 		   parser.y \
 		   scanner.l
 faircall_CFLAGS = $(CFLAGS) -I$(srcdir)/shared $(GLIB_CFLAGS) $(XML_CFLAGS)
-faircall_LDADD = shared/libfaircall.a $(GLIB_LIBS) $(XML_LIBS)
+faircall_LDADD = shared/libfaircall.a $(GLIB_LIBS) $(XML_LIBS) -lreadline
 
 gfaircall_SOURCES = gmain.c
 gfaircall_CFLAGS = $(CFLAGS) -I$(srcdir)/shared
