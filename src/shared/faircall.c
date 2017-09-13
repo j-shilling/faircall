@@ -7,6 +7,7 @@
 #include "roster-priv.h"
 #include "io.h"
 #include "error.h"
+#include "compare.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -33,21 +34,6 @@ static GQuark
 faircall_error_quark()
 {
   return g_quark_from_static_string ("faircall-error-quark");
-}
-
-static int
-faircall_strcmp (const void *_str1, const void *_str2)
-{
-  gchar *str1 =
-    _str1 ? g_utf8_normalize ((gchar *)_str1, -1, G_NORMALIZE_DEFAULT) : NULL;
-  gchar *str2 =
-    _str2 ? g_utf8_normalize ((gchar *)_str2, -1, G_NORMALIZE_DEFAULT) : NULL;
-
-  int ret = g_strcmp0 (str1, str2);
-  g_free (str1);
-  g_free (str2);
-
-  return ret;
 }
 
 gboolean

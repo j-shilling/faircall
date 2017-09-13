@@ -1,6 +1,7 @@
 #include "student.r"
 #include "roster-priv.h"
 #include "roster.r"
+#include "compare.h"
 
 #include <string.h>
 #include <glib.h>
@@ -264,22 +265,9 @@ faircall_roster_is_student (struct Roster const *const restrict self,
   if (!self || !_name)
     return FALSE;
 
-  gchar const *const name =
-    g_utf8_normalize (_name, -1, G_NORMALIZE_DEFAULT);
-  gboolean ret = FALSE;
-
   for (int i = 0; i < self->size; i++)
-    {
-      gchar const *const x =
-	g_utf8_normalize (self->arr[i]->name, -1, G_NORMALIZE_DEFAULT);
-      ret = (0 == g_strcmp0 (name, x));
-      g_free ((gpointer)x);
+    if (faircall_student_cmp_str (self->arr[i], _name) == 0)
+      return TRUE;
 
-      if (ret)
-	goto cleanup;
-    }
-
-cleanup:
-  g_free ((gpointer)name);
-  return ret;
+  return FALSE;
 }

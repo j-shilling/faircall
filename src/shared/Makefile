@@ -107,7 +107,8 @@ libfaircall_a_LIBADD =
 am_libfaircall_a_OBJECTS = libfaircall_a-class.$(OBJEXT) \
 	libfaircall_a-io.$(OBJEXT) libfaircall_a-student.$(OBJEXT) \
 	libfaircall_a-roster.$(OBJEXT) \
-	libfaircall_a-faircall.$(OBJEXT)
+	libfaircall_a-faircall.$(OBJEXT) \
+	libfaircall_a-compare.$(OBJEXT)
 libfaircall_a_OBJECTS = $(am_libfaircall_a_OBJECTS)
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
@@ -176,12 +177,12 @@ AR = ar
 AUTOCONF = ${SHELL} /home/jake/projects/faircall/missing autoconf
 AUTOHEADER = ${SHELL} /home/jake/projects/faircall/missing autoheader
 AUTOMAKE = ${SHELL} /home/jake/projects/faircall/missing automake-1.15
-AWK = mawk
+AWK = gawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
 CFLAGS = -O0 -ggdb
-CHECK_CFLAGS = -pthread
-CHECK_LIBS = -lcheck_pic -pthread -lrt -lm -lsubunit
+CHECK_CFLAGS = -pthread 
+CHECK_LIBS = -lcheck 
 CPP = gcc -E
 CPPFLAGS = 
 CYGPATH_W = echo
@@ -192,11 +193,11 @@ ECHO_N = -n
 ECHO_T = 
 EGREP = /bin/grep -E
 EXEEXT = 
-GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
-GLIB_LIBS = -lglib-2.0
+GLIB_CFLAGS = -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include 
+GLIB_LIBS = -lglib-2.0 
 GREP = /bin/grep
-GTK_CFLAGS = -pthread -I/usr/include/gtk-3.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 -I/usr/lib/x86_64-linux-gnu/dbus-1.0/include -I/usr/include/gtk-3.0 -I/usr/include/gio-unix-2.0/ -I/usr/include/mirclient -I/usr/include/mircore -I/usr/include/mircookie -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libpng16 -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib/x86_64-linux-gnu/glib-2.0/include
-GTK_LIBS = -lgtk-3 -lgdk-3 -lpangocairo-1.0 -lpango-1.0 -latk-1.0 -lcairo-gobject -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0
+GTK_CFLAGS = -pthread -I/usr/include/gtk-3.0 -I/usr/include/at-spi2-atk/2.0 -I/usr/include/at-spi-2.0 -I/usr/include/dbus-1.0 -I/usr/lib64/dbus-1.0/include -I/usr/include/gtk-3.0 -I/usr/include/gio-unix-2.0/ -I/usr/include/cairo -I/usr/include/pango-1.0 -I/usr/include/harfbuzz -I/usr/include/pango-1.0 -I/usr/include/atk-1.0 -I/usr/include/cairo -I/usr/include/pixman-1 -I/usr/include/freetype2 -I/usr/include/libdrm -I/usr/include/gdk-pixbuf-2.0 -I/usr/include/libpng16 -I/usr/include/glib-2.0 -I/usr/lib64/glib-2.0/include 
+GTK_LIBS = -lgtk-3 -lgdk-3 -lpangocairo-1.0 -lpango-1.0 -latk-1.0 -lcairo-gobject -lcairo -lgdk_pixbuf-2.0 -lgio-2.0 -lgobject-2.0 -lglib-2.0 
 INSTALL = /usr/bin/install -c
 INSTALL_DATA = ${INSTALL} -m 644
 INSTALL_PROGRAM = ${INSTALL}
@@ -225,11 +226,11 @@ PKG_CONFIG_LIBDIR =
 PKG_CONFIG_PATH = 
 RANLIB = ranlib
 SET_MAKE = 
-SHELL = /bin/bash
+SHELL = /bin/sh
 STRIP = 
 VERSION = 1.0
-XML_CFLAGS = -I/usr/include/libxml2
-XML_LIBS = -lxml2
+XML_CFLAGS = -I/usr/include/libxml2 
+XML_LIBS = -lxml2 
 YACC = bison -y
 YFLAGS = 
 abs_builddir = /home/jake/projects/faircall/src/shared
@@ -267,7 +268,6 @@ pdfdir = ${docdir}
 prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
-runstatedir = ${localstatedir}/run
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
@@ -281,7 +281,8 @@ libfaircall_a_SOURCES = class.c \
 			io.c \
 			student.c \
 			roster.c \
-			faircall.c
+			faircall.c \
+			compare.c
 
 libfaircall_a_CFLAGS = $(XML_CFLAGS) $(GLIB_CFLAGS)
 all: all-am
@@ -333,6 +334,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include ./$(DEPDIR)/libfaircall_a-class.Po
+include ./$(DEPDIR)/libfaircall_a-compare.Po
 include ./$(DEPDIR)/libfaircall_a-faircall.Po
 include ./$(DEPDIR)/libfaircall_a-io.Po
 include ./$(DEPDIR)/libfaircall_a-roster.Po
@@ -423,6 +425,20 @@ libfaircall_a-faircall.obj: faircall.c
 #	$(AM_V_CC)source='faircall.c' object='libfaircall_a-faircall.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-faircall.obj `if test -f 'faircall.c'; then $(CYGPATH_W) 'faircall.c'; else $(CYGPATH_W) '$(srcdir)/faircall.c'; fi`
+
+libfaircall_a-compare.o: compare.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-compare.o -MD -MP -MF $(DEPDIR)/libfaircall_a-compare.Tpo -c -o libfaircall_a-compare.o `test -f 'compare.c' || echo '$(srcdir)/'`compare.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-compare.Tpo $(DEPDIR)/libfaircall_a-compare.Po
+#	$(AM_V_CC)source='compare.c' object='libfaircall_a-compare.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-compare.o `test -f 'compare.c' || echo '$(srcdir)/'`compare.c
+
+libfaircall_a-compare.obj: compare.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-compare.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-compare.Tpo -c -o libfaircall_a-compare.obj `if test -f 'compare.c'; then $(CYGPATH_W) 'compare.c'; else $(CYGPATH_W) '$(srcdir)/compare.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-compare.Tpo $(DEPDIR)/libfaircall_a-compare.Po
+#	$(AM_V_CC)source='compare.c' object='libfaircall_a-compare.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-compare.obj `if test -f 'compare.c'; then $(CYGPATH_W) 'compare.c'; else $(CYGPATH_W) '$(srcdir)/compare.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
