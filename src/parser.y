@@ -109,7 +109,7 @@ close:
 even:
     EVEN BOOL	{
 		  GError *error = NULL;
-		  if (!faircall_set_forced_even ($<boolean>2, &error));
+		  if (!faircall_set_forced_even ($<boolean>2, &error))
 		    {
 		      g_printf ("Could update class. %s\n", error->message);
 		      g_error_free (error);
@@ -120,21 +120,31 @@ even:
 info:
     INFO	{
 		  GError *error = NULL;
-		  if (!faircall_info (NULL, &error));
+		  gchar **info = faircall_info (NULL, &error);
+		  if (error)
 		    {
 		      g_printf ("Could update class. %s\n", error->message);
 		      g_error_free (error);
 		    }
+
+                  for (gchar **line = info; line && *line; line++)
+                    g_printf ("%s", *line);
+		  g_strfreev (info);
 		}
 
  | INFO NAME	{
 		  GError *error = NULL;
-		  if (!faircall_info ($<string>2, &error));
+		  gchar **info = faircall_info ($<string>2, &error);
+		  if (error)
 		    {
 		      g_printf ("Could update class. %s\n", error->message);
 		      g_error_free (error);
 		    }
 		  g_free ($<string>2);
+
+                  for (gchar **line = info; line && *line; line++)
+                    g_printf ("%s", *line);
+		  g_strfreev (info);
 		}
 ;
 

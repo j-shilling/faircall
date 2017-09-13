@@ -1,3 +1,20 @@
+/*
+ *    This file is part of faircall.
+ *
+ *    faircall is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    faircall is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "class.r"
 #include "class-priv.h"
 #include "student.r"
@@ -750,4 +767,145 @@ error:
 		 "An unkown error occured.");
 
   return ret;
+}
+
+gboolean
+faircall_io_del_student (gchar const *const restrict classname,
+			 gchar const *const restrict name,
+			 GError **error)
+{
+  if (!classname || !name)
+    {
+      g_warning ("faircall_io_del_student called with null parameters.");
+      return TRUE;
+    }
+
+  GError *tmp_error = NULL;
+  xmlDocPtr doc = faircall_io_open_doc (&tmp_error);
+  if (!doc)
+    goto error;
+
+  xmlNodePtr root = faircall_io_get_root (doc, &tmp_error);
+  if (!root)
+    goto error;
+
+  xmlNodePtr class = NULL;
+  for (xmlNodePtr cur = root->xmlChildrenNode;
+       cur; cur = cur->next)
+    if (0 == xmlStrcmp (cur->name, CLASS))
+      {
+	xmlChar *_name = xmlGetProp (cur, NAME);
+	if (0 == xmlStrcmp (_name, classname))
+	  class = cur;
+	xmlFree (_name);
+	if (class)
+	  break;
+      }
+
+  if (!class)
+    goto notfound;
+
+  xmlNodePtr roster = NULL;
+  for (xmlNodePtr cur = class->xmlChildrenNode;
+       cur; cur = cur->next)
+    if (0 == xmlStrcmp (cur->name, ROSTER))
+      {
+	roster = cur;
+	break;
+      }
+
+  if (!roster)
+    goto notfound;
+
+  xmlNodePtr student = NULL;
+  for (xmlNodePtr cur = roster->xmlChildrenNode;
+       cur; cur = cur->next)
+    if (0 == xmlStrcmp (cur->name, STUDENT))
+      {
+	xmlChar *_name = xmlGetProp (cur, NAME);
+	if (0 == xmlStrcmp (_name, name))
+	  student = cur;
+	xmlFree (_name);
+	if (student)
+	  break;
+      }
+
+  if (!student)
+    goto notfound;
+
+  xmlUnlinkNode (student);
+  xmlFreeNode (student);
+
+  if (0 > xmlSaveFile (faircall_io_get_filename(), doc))
+    goto error;
+notfound:
+  xmlFreeDoc (doc);
+  return TRUE;
+error:
+  if (tmp_error)
+    g_propagate_error (error, tmp_error);
+  else
+    g_set_error (error,
+		 FAIRCALL_IO_ERROR,
+		 UNKOWN_ERROR,
+		 "An unkown error occured.");
+
+  if (doc) xmlFreeDoc (doc);
+  return FALSE;
+}
+
+gboolean
+faircall_io_del_class (gchar const *const restrict name,
+		       GError **error)
+{
+  if (!name)
+    {
+      g_warning ("faircall_io_del_class called with null parameters.");
+      return TRUE;
+    }
+
+  GError *tmp_error = NULL;
+  xmlDocPtr doc = faircall_io_open_doc (&tmp_error);
+  if (!doc)
+    goto error;
+
+  xmlNodePtr root = faircall_io_get_root (doc, &tmp_error);
+  if (!root)
+    goto error;
+
+  xmlNodePtr class = NULL;
+  for (xmlNodePtr cur = root->xmlChildrenNode;
+       cur; cur = cur->next)
+    if (0 == xmlStrcmp (cur->name, CLASS))
+      {
+	xmlChar *_name = xmlGetProp (cur, NAME);
+	if (0 == xmlStrcmp (_name, name))
+	  class = cur;
+	xmlFree (_name);
+	if (class)
+	  break;
+      }
+
+  if (!class)
+    goto notfound;
+
+  xmlUnlinkNode (class);
+  xmlFreeNode (class);
+
+  if (0 > xmlSaveFile (faircall_io_get_filename(), doc))
+    goto error;
+notfound:
+  xmlFreeDoc (doc);
+  return TRUE;
+error:
+  if (tmp_error)
+    g_propagate_error (error, tmp_error);
+  else
+    g_set_error (error,
+		 FAIRCALL_IO_ERROR,
+		 UNKOWN_ERROR,
+		 "An unkown error occured.");
+
+  if (doc) xmlFreeDoc (doc);
+  return FALSE;
 }

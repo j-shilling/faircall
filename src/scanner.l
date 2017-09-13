@@ -3,6 +3,8 @@
 #include <glib/gprintf.h>
 
 #include "parser.h"
+
+void set_utf8_string(void);
 %}
 
 %option noyywrap
@@ -27,7 +29,11 @@ CALL	"call"
 HELP	"h"|"help"
 QUIT	"q"|"quit"
 
+%x STRING
 %%
+
+<STRING>\"|\'	BEGIN(INITIAL);
+<STRING>.+	set_utf8_string(); return NAME;
 
 {ADD}		return ADD;
 {DELETE}	return DELETE;
@@ -74,3 +80,18 @@ QUIT	"q"|"quit"
 	}
 
 %%
+
+void
+set_utf8_string(void)
+{
+  GError *error = NULL;
+  yylval.string = g_locale_to_utf8 (yytext,
+				   -1,
+				   NULL, NULL,
+				   &error);
+  if (error)
+    {
+      g_printf ("Error converting input: %s", error->message);
+      g_error_free (error);
+    }
+}

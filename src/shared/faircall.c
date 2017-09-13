@@ -1,8 +1,23 @@
+/*
+ *    This file is part of faircall.
+ *
+ *    faircall is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    faircall is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include <glib.h>
 
-#include "class.r"
-#include "student.r"
-#include "roster.r"
+#include "faircall.h"
 #include "class-priv.h"
 #include "roster-priv.h"
 #include "io.h"
@@ -11,20 +26,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-
-gboolean faircall_open_class (gchar const *const name,
-			      GError **error);gboolean faircall_close_class (GError **error);
-gboolean faircall_add_student (gchar const *const name, GError **error);
-gboolean faircall_del_student (gchar const *const name, GError **error);
-gboolean faircall_undo_call (GError **error);
-gboolean faircall_mark_absent (GError **error);
-gboolean faircall_set_forced_even (gboolean const value, GError **error);
-
-gchar *  faircall_call_student (GError **error);
-gchar ** faircall_call_n_students (guint n, GError **error);
-
-gchar ** faircall_info (GError **error);
-gchar *  faircall_get_open_class_name(void);
 
 static struct Class *class = NULL;
 
@@ -79,7 +80,7 @@ gboolean
 faircall_close_class (GError **error)
 {
   if (!class)
-    return FALSE;
+    return TRUE;
 
   gboolean ret = faircall_io_save_class (class, error);
   if (ret)
@@ -114,6 +115,18 @@ faircall_add_student (gchar const *const name, GError **error)
 gboolean
 faircall_del_student (gchar const *const name, GError **error)
 {
+  GError *tmp_error = NULL;
+  if (faircall_io_is_class (name, &tmp_error))
+    {
+      if (tmp_error)
+	{
+	  g_propagate_error (error, tmp_error);
+	  return FALSE;
+	}
+
+      return faircall_io_del_class (name, error);
+    }
+
   if (!class)
     {
       g_set_error (error,
@@ -123,8 +136,13 @@ faircall_del_student (gchar const *const name, GError **error)
       return FALSE;
     }
 
-  GError *tmp_error = NULL;
   faircall_class_del_student (class, name, &tmp_error);
+  if (tmp_error)
+    {
+      g_propagate_error (error, tmp_error);
+      return FALSE;
+    }
+  faircall_io_del_student (faircall_class_name(class), name, &tmp_error);
   if (tmp_error)
     {
       g_propagate_error (error, tmp_error);
@@ -198,32 +216,58 @@ faircall_call_n_students (guint n, GError **error)
 }
 
 gchar **
-faircall_info (GError **error)
+faircall_info (gchar const *const restrict name, GError **error)
 {
+  if (NULL == name)
+    {
+      if (!class)
+	{
+	  g_set_error (error,
+		       FAIRCALL_ERROR,
+		       NO_OPEN_CLASS_ERROR,
+		       "There is no open class to examine.");
+	  return NULL;
+	}
+
+      return faircall_class_info (class, error);
+    }
+  
+  GError *tmp_error = NULL;
+  if (faircall_io_is_class (name, &tmp_error))
+    {
+      struct Class *other = faircall_io_get_class (name, &tmp_error);
+      if (tmp_error)
+	{
+	  g_propagate_error (error, tmp_error);
+	  return NULL;
+	}
+
+      return faircall_class_info (other, error);
+    }
+  else if (tmp_error)
+    {
+      g_propagate_error (error, tmp_error);
+      return NULL;
+    }
+
   if (!class)
     {
       g_set_error (error,
 		   FAIRCALL_ERROR,
 		   NO_OPEN_CLASS_ERROR,
-		   "There is not class to delete from.");
+		   "There is no open class to examine.");
       return NULL;
     }
 
-  gchar **ret = g_malloc0 (sizeof (gchar *) * (faircall_roster_length (class->r) + 3));
-  ret[0] = g_strdup_printf ("%s - Forced Event: %s - Students: %lu\n",
-			    class->name, class->forced_even ? "true" : "false",
-			    faircall_roster_length (class->r));
-  ret[1] = g_strdup ("\n");
-
-  struct Student **students = faircall_roster_as_array (class->r);
-  for (int i = 0; students[i]; i ++)
+  struct Student *student =
+    faircall_class_get_student (class, name, &tmp_error);
+  if (tmp_error)
     {
-      ret[i + 2] = g_strdup_printf ("%s called %u times\n",
-				    students[i]->name,
-				    students[i]->called_on);
+      g_propagate_error (error, tmp_error);
+      return NULL;
     }
 
-  return ret;
+  return faircall_student_info (student, error);
 }
 
 gboolean
@@ -255,40 +299,20 @@ faircall_call_student_by_name (gchar const *const restrict name,
       return FALSE;
     }
 
-  struct Roster *r = class->r;
-  for (int i = 0; i < r->size; i++)
-    {
-      if (r->arr[i] && g_strcmp0 (name, r->arr[i]->name) == 0)
-	{
-	  r->arr[i]->called_on ++;
-	  return TRUE;
-	}
-    }
-
-  g_set_error (error,
-	       FAIRCALL_ERROR,
-	       NO_SUCH_NAME_ERROR,
-	       "There is no \"%s\" in class \"%s\"",
-	       name, class->name);
-  return FALSE;
+  return faircall_class_call_student_by_name (class, name, error);
 }
 
 gchar **
 faircall_list (GError **error)
 {
-  if (!class)
+  if (class)
+    return faircall_class_list (class, error);
+  else
     return faircall_io_saved_classes (error);
-
-  gchar **ret = g_malloc0 (sizeof (char *) * (class->r->size + 1));
-  memcpy (ret, class->r->arr, class->r->size);
-
-  qsort (ret, class->r->size, class->r->size, faircall_strcmp);
-
-  return ret;
 }
 
 gchar *
 faircall_get_open_class_name(void)
 {
-  return class ? class->name : "";
+  return class ? faircall_class_name (class) : "";
 }

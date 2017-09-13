@@ -26,6 +26,8 @@
 		     gboolean,
 		     GError */
 
+#include "error.h" /* Also define error codes */
+
 /*************************************************************************
   OPEN AND CLOSE CLASSES
 *************************************************************************/
@@ -34,7 +36,7 @@
    then a new class will be created. Function returns TRUE when the class
    was successfully opened. If an error occurs *error is set and FALSE
    is returned */
-gboolean faircall_open_class (gchar const *const name, GError **error);/
+gboolean faircall_open_class (gchar const *const name, GError **error);
 
 /* Closes the currently open class. Returns TRUE on success. Of failure
    FALSE is returned and *error is set. */

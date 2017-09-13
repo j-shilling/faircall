@@ -1,11 +1,30 @@
+/*
+ *    This file is part of faircall.
+ *
+ *    faircall is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    faircall is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "class.r"
 #include "class-priv.h"
 #include "student.r"
 #include "student-priv.h"
 #include "roster.r"
 #include "roster-priv.h"
+
 #include "io.h"
 #include "error.h"
+#include "compare.h"
 
 #include <stdlib.h>
 #include <math.h>
@@ -19,23 +38,9 @@ faircall_class_error_quark()
   return g_quark_from_static_string ("faircall-class-error-quark");
 }
 
-/* Used to check if a student name is unique within a 
-   class */
-static gint
-faircall_find_student_by_name (gconstpointer a, gconstpointer b)
-{
-  gchar const *const x =
-    g_utf8_normalize (((struct Student *)a)->name, -1, G_NORMALIZE_DEFAULT);
-  gchar const *const y =
-    g_utf8_normalize ((gchar *)b, -1, G_NORMALIZE_DEFAULT);
-
-  gint ret = g_strcmp0 (x, y);
-
-  g_free ((gpointer)x);
-  g_free ((gpointer)y);
-
-  return ret;
-}
+/************************************************************************
+  LOCAL FUNCTIONS TO CALCULATE OUTLIERS
+************************************************************************/
 
 /* Passed to qsort */
 static int
@@ -53,8 +58,311 @@ faircall_median (gdouble *vals, guint len)
     : vals[len / 2];
 }
 
-/* Passed to g_thread_new to update a class after
-   a student has been called */
+/* Return -1 if called_on is low, 0 if fine, 1 if too high */
+static gint
+faircall_outlier (struct Class *class, struct Student *student)
+{
+  if (!class || !student)
+    {
+      g_warning ("Called faircall_outlier with null parameters.");
+      return 0;
+    }
+
+  if (class->r->size <= 1)
+    return 0;
+
+  gdouble *counts = g_malloc (sizeof (gdouble) * class->r->size);
+  for (int i = 0; i < class->r->size; i ++)
+    counts[i] = (gdouble) class->r->arr[i]->called_on;
+
+  qsort (counts, class->r->size, sizeof (gdouble), faircall_gdouble_cmp);
+  gdouble q1 = faircall_median (counts, class->r->size / 2);
+  gdouble q3 = (class->r->size % 2) == 0 ?
+    faircall_median (counts + (class->r->size / 2), class->r->size / 2)
+    : faircall_median (counts + ((class->r->size / 2) + 1), class->r->size / 2);
+  g_free (counts);
+
+  gdouble shift = (q3 - q1) * 1.5;
+  gdouble max = q3 + shift;
+  gdouble min = q3 - shift;
+
+  if (student->called_on < min)
+    return -1;
+  else if (student->called_on > max)
+    return 1;
+  else
+    return 0;
+}
+
+/************************************************************************
+  CONSTRUCT AND DESTROY
+*************************************************************************/
+
+struct Class *
+faircall_class_alloc (void)
+{
+  struct Class *ret =
+    (struct Class *) g_malloc (sizeof (struct Class));
+  if (!ret)
+    return NULL;
+
+  ret->name = NULL;
+  ret->forced_even = FALSE;
+  ret->r = faircall_roster_new();
+  ret->last_called = NULL;
+  ret->last_last_called = NULL;
+
+  g_mutex_init (&ret->m);
+
+  return ret;
+}
+
+struct Class *
+faircall_class_new (gchar const *const restrict name,
+		    GError **error)
+{
+  /* VALIDATE name */
+
+  // Name must be present
+  if (!name || !name[0])
+    {
+      g_set_error (error,
+		   FAIRCALL_CLASS_ERROR,
+		   NO_NAME_ERROR,
+		   "Every class must have a name.");
+      return NULL;
+    }
+
+  // Name must be UTF8
+  if (!g_utf8_validate (name, -1, NULL))
+    {
+      g_warning ("faircall_class_new was given a name "
+		 "which was not a valid UTF8 string.");
+      return NULL;
+    }
+
+  // Name must be unique
+  GError *tmp_error = NULL;
+  if (faircall_io_is_class (name, &tmp_error))
+    {
+      if (tmp_error)
+	g_propagate_error (error, tmp_error);
+      else
+	g_set_error (error,
+		     FAIRCALL_CLASS_ERROR,
+		     NAME_NOT_UNIQUE_ERROR,
+		     "There is alread a class \"%s\".",
+		     name);
+      return NULL;
+    }
+
+  struct Class *ret = faircall_class_alloc ();
+
+  ret->name = g_strdup (name);
+  return ret;
+}
+
+void
+faircall_class_delete (struct Class *class)
+{
+  if (!class)
+    return; 
+
+  g_mutex_lock (&class->m); // don't free while class is being edited
+
+  g_free (class->name);
+  faircall_roster_delete (class->r);
+  g_mutex_unlock (&class->m);
+  g_mutex_clear (&class->m);
+  g_free (class);
+}
+/************************************************************************
+  GET INFORMATION AND DATA
+*************************************************************************/
+
+gchar *
+faircall_class_name (struct Class const *const restrict class)
+{
+  return class ? class->name : NULL;
+}
+
+gchar **
+faircall_class_info (struct Class const *const restrict class,
+		     GError **error)
+{
+  if (!class)
+    {
+      g_warning ("called faircall_class_info with null class");
+      return NULL;
+    }
+
+  gchar **ret = g_malloc (sizeof (gchar *) * (class->r->size + 3));
+  ret[0] = g_strdup_printf ("%s: %lu students, forced even: %s\n",
+			    faircall_class_name (class),
+			    faircall_roster_length (class->r),
+			    class->forced_even ? "true" : "false");
+  ret[1] = g_strdup ("\n");
+
+  for (int i = 0; i < class->r->size; i++)
+    {
+      struct Student *student = class->r->arr[i];
+      guint outlier = faircall_outlier ((struct Class *)class, student);
+
+      ret[i+2] = g_strdup_printf ("%s  %u %s\n",
+			 student->name,
+			 student->called_on,
+			 outlier == 0 ? "" : outlier > 0 ? "[too high]" : "[too low]");
+    }
+
+  ret[class->r->size + 2] = 0;
+  qsort (ret + 2, class->r->size, sizeof (gchar *), faircall_strcmp);
+
+  return ret;
+}
+
+struct Student *
+faircall_class_get_student (struct Class const *const restrict class,
+			    gchar const *const restrict name,
+			    GError **error)
+{
+  if (!class)
+    {
+      g_warning ("faircall_class_get_student called on null class");
+      return NULL;
+    }
+
+  for (int i = 0; i < class->r->size; i ++)
+    if (faircall_student_cmp_str (&class->r->arr[i], &name) == 0)
+      return class->r->arr[i];
+
+  g_set_error (error,
+	       FAIRCALL_CLASS_ERROR,
+	       NO_SUCH_NAME_ERROR,
+	       "There is not student named \"%s\" in class \"%s\"",
+	       name, class->name);
+
+  return NULL;
+}
+
+gchar **
+faircall_class_list (struct Class const *const restrict class,
+	 	     GError **error)
+{
+  if (!class)
+    {
+      g_warning ("faircall_class_list called on a null class.");
+      return NULL;
+    }
+
+  size_t size = faircall_roster_length (class->r);
+  gchar **ret =
+    g_malloc (sizeof (gchar *) * (size + 1));
+
+  for (int i = 0; i < class->r->size; i++)
+    ret[i] = g_strdup_printf ("%s\n",
+			      class->r->arr[i]->name);
+
+  ret[size] = 0;
+
+  qsort (ret, size, sizeof (gchar *), faircall_strcmp);
+  return ret;
+}
+
+/************************************************************************
+  GET INFORMATION AND DATA
+*************************************************************************/
+
+static void
+faircall_class_add_student (struct Class *const restrict class,
+			    struct Student const *const restrict student,
+			    GError **error)
+{
+  if (!class || !student)
+    {
+      g_warning ("Cannot call faircall_class_add_student with null parameters: "
+		 "{ class = %p, student = %p }",
+		 class, student);
+      return;
+    }
+
+  if (faircall_roster_is_student (class->r, student->name))
+    {
+      g_set_error (error,
+		   FAIRCALL_CLASS_ERROR,
+		   NAME_NOT_UNIQUE_ERROR,
+		   "There is alread a %s in class %s.",
+		   student->name, class->name);
+      return;
+    }
+
+  g_mutex_lock (&class->m);
+  faircall_roster_add_student (class->r, student);
+  g_mutex_unlock (&class->m);
+}
+
+void
+faircall_class_new_student (struct Class *const restrict class,
+			    gchar const *const restrict name,
+			    GError **error)
+{
+  if (!class)
+  {
+    g_warning ("Cannot call faircall_class_new_student on a null class");
+    return;
+  }
+
+  GError *tmp_error = NULL;
+  struct Student const *const student =
+    faircall_student_new (name, &tmp_error);
+  if (tmp_error)
+    {
+      g_propagate_error (error, tmp_error);
+      return;
+    }
+
+  faircall_class_add_student (class, student, &tmp_error);
+  if (tmp_error)
+    {
+      g_propagate_error (error, tmp_error);
+      return;
+    }
+}
+
+void
+faircall_class_del_student (struct Class *const restrict class,
+			    gchar const *const restrict name,
+			    GError **error)
+{
+  if (!class || !name)
+    {
+      g_warning ("Cannot call faircall_class_del_student with null parameters "
+		 "class = %p, name = %p", class, name);
+      return;
+    }
+
+  g_mutex_lock (&class->m);
+  GError *tmp_error = NULL;
+  struct Student * student =
+    faircall_class_get_student (class, name, &tmp_error);
+  if (tmp_error)
+    g_propagate_error (error, tmp_error);
+  else
+    faircall_roster_del_student (class->r, student);
+  g_mutex_unlock (&class->m);
+}
+
+void
+faircall_class_set_forced_even (struct Class *const restrict class,
+				gboolean const val)
+{
+  if (!class)
+    return;
+
+  g_mutex_lock (&class->m);
+  class->forced_even = val;
+  g_mutex_unlock (&class->m);
+}
+
 gpointer
 faircall_class_update (gpointer data)
 {
@@ -168,129 +476,9 @@ cleanup:
   return NULL;
 }
 
-/* Functions */
-
-struct Class *
-faircall_class_new (gchar const *const restrict name,
-		    GError **error)
-{
-  /* VALIDATE name */
-
-  // Name must be present
-  if (!name || !name[0])
-    {
-      g_set_error (error,
-		   FAIRCALL_CLASS_ERROR,
-		   NO_NAME_ERROR,
-		   "Every class must have a name.");
-      return NULL;
-    }
-
-  // Name must be UTF8
-  if (!g_utf8_validate (name, -1, NULL))
-    {
-      g_warning ("faircall_class_new was given a name "
-		 "which was not a valid UTF8 string.");
-      return NULL;
-    }
-
-  // Name must be unique
-  GError *tmp_error = NULL;
-  if (faircall_io_is_class (name, &tmp_error))
-    {
-      if (tmp_error)
-	g_propagate_error (error, tmp_error);
-      else
-	g_set_error (error,
-		     FAIRCALL_CLASS_ERROR,
-		     NAME_NOT_UNIQUE_ERROR,
-		     "There is alread a class \"%s\".",
-		     name);
-      return NULL;
-    }
-
-  struct Class *ret =
-    (struct Class *) g_malloc (sizeof (struct Class));
-
-  ret->name = g_strdup (name);
-  ret->forced_even = FALSE;
-  ret->r = faircall_roster_new();
-  ret->last_called = NULL;
-
-  g_mutex_init (&ret->m);
-
-  return ret;
-}
-
-void
-faircall_class_delete (gpointer data)
-{
-  struct Class *class = data;
-
-  g_mutex_lock (&class->m); // don't free while class is being edited
-
-  g_free (class->name);
-  faircall_roster_delete (class->r);
-  g_mutex_unlock (&class->m);
-  g_mutex_clear (&class->m);
-  g_free (class);
-}
-
-void
-faircall_class_add_student (struct Class *const restrict class,
-			    struct Student const *const restrict student,
-			    GError **error)
-{
-  if (!class || !student)
-    {
-      g_warning ("Cannot call faircall_class_add_student with null parameters: "
-		 "{ class = %p, student = %p }",
-		 class, student);
-      return;
-    }
-
-  if (faircall_roster_is_student (class->r, student->name))
-    {
-      g_set_error (error,
-		   FAIRCALL_CLASS_ERROR,
-		   NAME_NOT_UNIQUE_ERROR,
-		   "There is alread a %s in class %s.",
-		   student->name, class->name);
-      return;
-    }
-
-  g_mutex_lock (&class->m);
-  faircall_roster_add_student (class->r, student);
-  g_mutex_unlock (&class->m);
-}
-
-void
-faircall_class_new_student (struct Class *const restrict class,
-			    gchar const *const restrict name,
-			    GError **error)
-{
-  if (!class)
-  {
-    g_warning ("Cannot call faircall_class_new_student on a null class");
-    return;
-  }
-
-  GError *tmp_error = NULL;
-  struct Student const *const student =
-    faircall_student_new (name, &tmp_error);
-  if (tmp_error)
-    {
-      g_propagate_error (error, tmp_error);
-      return;
-    }
-
-  faircall_class_add_student (class, student, &tmp_error);
-  if (tmp_error)
-    {
-      g_propagate_error (error, tmp_error);
-      return;
-    }
-}
+/************************************************************************
+  CALLS AND UNDOS
+*************************************************************************/
 
 gchar *
 faircall_class_call_student (struct Class *const restrict class)
@@ -371,45 +559,6 @@ faircall_class_absent_student (struct Class *const restrict class)
 		class);
 }
 
-void
-faircall_class_set_forced_even (struct Class *const restrict class,
-				 gboolean const val)
-{
-  if (!class)
-    return;
-
-  g_mutex_lock (&class->m);
-  class->forced_even = val;
-  g_mutex_unlock (&class->m);
-}
-
-void
-faircall_class_del_student (struct Class *const restrict class,
-			    gchar const *const restrict name,
-			    GError **error)
-{
-  if (!class || !name)
-    {
-      g_warning ("Cannot call faircall_class_del_student with null parameters "
-		 "class = %p, name = %p", class, name);
-      return;
-    }
-
-  g_mutex_lock (&class->m);
-  struct Student **students = faircall_roster_as_array (class->r);
-  for (struct Student **cur = students; cur; cur++)
-    {
-      if (faircall_find_student_by_name (*cur, name) == 0)
-	{
-	  faircall_roster_del_student (class->r, *cur);
-	  break;
-	}
-    }
-
-  g_mutex_unlock (&class->m);
-  g_free (students);
-}
-
 gchar **
 faircall_class_call_n_students (struct Class *const restrict class,
 				guint const n,
@@ -457,3 +606,20 @@ faircall_class_call_n_students (struct Class *const restrict class,
   return ret;
 }
 
+gboolean
+faircall_class_call_student_by_name (struct Class *const restrict class,
+				     gchar const *const restrict name,
+			  	     GError **error)
+{
+  GError *tmp_error = NULL;
+  struct Student *student =
+    faircall_class_get_student (class, name, &tmp_error);
+  if (tmp_error)
+    {
+      g_propagate_error (error, tmp_error);
+      return FALSE;
+    }
+
+  student->called_on ++;
+  return TRUE;
+}

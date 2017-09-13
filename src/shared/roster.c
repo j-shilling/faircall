@@ -103,6 +103,10 @@ faircall_roster_del_student (struct Roster *const restrict self,
 	  memmove (self->arr + i, self->arr + i + 1,
 		   (self->size - 1 - i) * sizeof (struct Student *));
 	  self->arr[self->size - 1] = NULL;
+	  self->size --;
+
+	  if (i < self->nmemb)
+	    self->nmemb--;
 	  break;
 	}
     }
@@ -266,7 +270,7 @@ faircall_roster_is_student (struct Roster const *const restrict self,
     return FALSE;
 
   for (int i = 0; i < self->size; i++)
-    if (faircall_student_cmp_str (self->arr[i], _name) == 0)
+    if (faircall_student_cmp_str (&self->arr[i], &_name) == 0)
       return TRUE;
 
   return FALSE;
