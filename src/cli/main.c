@@ -8,7 +8,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
-#include <shared/faircall.h>
+#include <faircall.h>
 #include <parser.h>
 #include <config.h>
 

@@ -33,5 +33,7 @@ AC_CHECK_FUNCS([atexit mkdir sqrt asprintf strdup strerror])
 AC_CONFIG_FILES([Makefile
                  src/Makefile
 		 src/shared/Makefile
+		 src/cli/Makefile
+		 src/gui/Makefile
                  tests/Makefile])
 AC_OUTPUT

@@ -86,7 +86,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-subdir = src/shared
+bin_PROGRAMS = gfaircall$(EXEEXT)
+subdir = src/gui
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/configure.ac
 am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
@@ -96,20 +97,13 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-LIBRARIES = $(noinst_LIBRARIES)
-ARFLAGS = cru
-AM_V_AR = $(am__v_AR_@AM_V@)
-am__v_AR_ = $(am__v_AR_@AM_DEFAULT_V@)
-am__v_AR_0 = @echo "  AR      " $@;
-am__v_AR_1 = 
-libfaircall_a_AR = $(AR) $(ARFLAGS)
-libfaircall_a_LIBADD =
-am_libfaircall_a_OBJECTS = libfaircall_a-class.$(OBJEXT) \
-	libfaircall_a-io.$(OBJEXT) libfaircall_a-student.$(OBJEXT) \
-	libfaircall_a-roster.$(OBJEXT) \
-	libfaircall_a-faircall.$(OBJEXT) \
-	libfaircall_a-compare.$(OBJEXT)
-libfaircall_a_OBJECTS = $(am_libfaircall_a_OBJECTS)
+am__installdirs = "$(DESTDIR)$(bindir)"
+PROGRAMS = $(bin_PROGRAMS)
+am_gfaircall_OBJECTS = gfaircall-gmain.$(OBJEXT)
+gfaircall_OBJECTS = $(am_gfaircall_OBJECTS)
+gfaircall_DEPENDENCIES = $(srcdir)/../shared/libfaircall.a
+gfaircall_LINK = $(CCLD) $(gfaircall_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) \
+	$(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -142,8 +136,8 @@ AM_V_CCLD = $(am__v_CCLD_@AM_V@)
 am__v_CCLD_ = $(am__v_CCLD_@AM_DEFAULT_V@)
 am__v_CCLD_0 = @echo "  CCLD    " $@;
 am__v_CCLD_1 = 
-SOURCES = $(libfaircall_a_SOURCES)
-DIST_SOURCES = $(libfaircall_a_SOURCES)
+SOURCES = $(gfaircall_SOURCES)
+DIST_SOURCES = $(gfaircall_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -277,15 +271,9 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-noinst_LIBRARIES = libfaircall.a
-libfaircall_a_SOURCES = class.c \
-			io.c \
-			student.c \
-			roster.c \
-			faircall.c \
-			compare.c
-
-libfaircall_a_CFLAGS = $(XML_CFLAGS) $(GLIB_CFLAGS)
+gfaircall_SOURCES = gmain.c
+gfaircall_CFLAGS = $(CFLAGS) -I$(srcdir)/../shared
+gfaircall_LDADD = $(srcdir)/../shared/libfaircall.a
 all: all-am
 
 .SUFFIXES:
@@ -299,9 +287,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/shared/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu src/gui/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu src/shared/Makefile
+	  $(AUTOMAKE) --gnu src/gui/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -319,14 +307,52 @@ $(top_srcdir)/configure:  $(am__configure_deps)
 $(ACLOCAL_M4):  $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
+install-binPROGRAMS: $(bin_PROGRAMS)
+	@$(NORMAL_INSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	if test -n "$$list"; then \
+	  echo " $(MKDIR_P) '$(DESTDIR)$(bindir)'"; \
+	  $(MKDIR_P) "$(DESTDIR)$(bindir)" || exit 1; \
+	fi; \
+	for p in $$list; do echo "$$p $$p"; done | \
+	sed 's/$(EXEEXT)$$//' | \
+	while read p p1; do if test -f $$p \
+	  ; then echo "$$p"; echo "$$p"; else :; fi; \
+	done | \
+	sed -e 'p;s,.*/,,;n;h' \
+	    -e 's|.*|.|' \
+	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
+	sed 'N;N;N;s,\n, ,g' | \
+	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
+	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
+	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
+	    else { print "f", $$3 "/" $$4, $$1; } } \
+	  END { for (d in files) print "f", d, files[d] }' | \
+	while read type dir files; do \
+	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
+	    test -z "$$files" || { \
+	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(bindir)$$dir'"; \
+	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(bindir)$$dir" || exit $$?; \
+	    } \
+	; done
 
-clean-noinstLIBRARIES:
-	-test -z "$(noinst_LIBRARIES)" || rm -f $(noinst_LIBRARIES)
+uninstall-binPROGRAMS:
+	@$(NORMAL_UNINSTALL)
+	@list='$(bin_PROGRAMS)'; test -n "$(bindir)" || list=; \
+	files=`for p in $$list; do echo "$$p"; done | \
+	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
+	      -e 's/$$/$(EXEEXT)/' \
+	`; \
+	test -n "$$list" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(bindir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(bindir)" && rm -f $$files
 
-libfaircall.a: $(libfaircall_a_OBJECTS) $(libfaircall_a_DEPENDENCIES) $(EXTRA_libfaircall_a_DEPENDENCIES) 
-	$(AM_V_at)-rm -f libfaircall.a
-	$(AM_V_AR)$(libfaircall_a_AR) libfaircall.a $(libfaircall_a_OBJECTS) $(libfaircall_a_LIBADD)
-	$(AM_V_at)$(RANLIB) libfaircall.a
+clean-binPROGRAMS:
+	-test -z "$(bin_PROGRAMS)" || rm -f $(bin_PROGRAMS)
+
+gfaircall$(EXEEXT): $(gfaircall_OBJECTS) $(gfaircall_DEPENDENCIES) $(EXTRA_gfaircall_DEPENDENCIES) 
+	@rm -f gfaircall$(EXEEXT)
+	$(AM_V_CCLD)$(gfaircall_LINK) $(gfaircall_OBJECTS) $(gfaircall_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -334,12 +360,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-class.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-compare.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-faircall.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-io.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-roster.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libfaircall_a-student.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gfaircall-gmain.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -357,89 +378,19 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(COMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
 
-libfaircall_a-class.o: class.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-class.o -MD -MP -MF $(DEPDIR)/libfaircall_a-class.Tpo -c -o libfaircall_a-class.o `test -f 'class.c' || echo '$(srcdir)/'`class.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-class.Tpo $(DEPDIR)/libfaircall_a-class.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='class.c' object='libfaircall_a-class.o' libtool=no @AMDEPBACKSLASH@
+gfaircall-gmain.o: gmain.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gfaircall_CFLAGS) $(CFLAGS) -MT gfaircall-gmain.o -MD -MP -MF $(DEPDIR)/gfaircall-gmain.Tpo -c -o gfaircall-gmain.o `test -f 'gmain.c' || echo '$(srcdir)/'`gmain.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gfaircall-gmain.Tpo $(DEPDIR)/gfaircall-gmain.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gmain.c' object='gfaircall-gmain.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-class.o `test -f 'class.c' || echo '$(srcdir)/'`class.c
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gfaircall_CFLAGS) $(CFLAGS) -c -o gfaircall-gmain.o `test -f 'gmain.c' || echo '$(srcdir)/'`gmain.c
 
-libfaircall_a-class.obj: class.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-class.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-class.Tpo -c -o libfaircall_a-class.obj `if test -f 'class.c'; then $(CYGPATH_W) 'class.c'; else $(CYGPATH_W) '$(srcdir)/class.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-class.Tpo $(DEPDIR)/libfaircall_a-class.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='class.c' object='libfaircall_a-class.obj' libtool=no @AMDEPBACKSLASH@
+gfaircall-gmain.obj: gmain.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gfaircall_CFLAGS) $(CFLAGS) -MT gfaircall-gmain.obj -MD -MP -MF $(DEPDIR)/gfaircall-gmain.Tpo -c -o gfaircall-gmain.obj `if test -f 'gmain.c'; then $(CYGPATH_W) 'gmain.c'; else $(CYGPATH_W) '$(srcdir)/gmain.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/gfaircall-gmain.Tpo $(DEPDIR)/gfaircall-gmain.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='gmain.c' object='gfaircall-gmain.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-class.obj `if test -f 'class.c'; then $(CYGPATH_W) 'class.c'; else $(CYGPATH_W) '$(srcdir)/class.c'; fi`
-
-libfaircall_a-io.o: io.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-io.o -MD -MP -MF $(DEPDIR)/libfaircall_a-io.Tpo -c -o libfaircall_a-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-io.Tpo $(DEPDIR)/libfaircall_a-io.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io.c' object='libfaircall_a-io.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-io.o `test -f 'io.c' || echo '$(srcdir)/'`io.c
-
-libfaircall_a-io.obj: io.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-io.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-io.Tpo -c -o libfaircall_a-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-io.Tpo $(DEPDIR)/libfaircall_a-io.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='io.c' object='libfaircall_a-io.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-io.obj `if test -f 'io.c'; then $(CYGPATH_W) 'io.c'; else $(CYGPATH_W) '$(srcdir)/io.c'; fi`
-
-libfaircall_a-student.o: student.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-student.o -MD -MP -MF $(DEPDIR)/libfaircall_a-student.Tpo -c -o libfaircall_a-student.o `test -f 'student.c' || echo '$(srcdir)/'`student.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-student.Tpo $(DEPDIR)/libfaircall_a-student.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='student.c' object='libfaircall_a-student.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-student.o `test -f 'student.c' || echo '$(srcdir)/'`student.c
-
-libfaircall_a-student.obj: student.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-student.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-student.Tpo -c -o libfaircall_a-student.obj `if test -f 'student.c'; then $(CYGPATH_W) 'student.c'; else $(CYGPATH_W) '$(srcdir)/student.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-student.Tpo $(DEPDIR)/libfaircall_a-student.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='student.c' object='libfaircall_a-student.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-student.obj `if test -f 'student.c'; then $(CYGPATH_W) 'student.c'; else $(CYGPATH_W) '$(srcdir)/student.c'; fi`
-
-libfaircall_a-roster.o: roster.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-roster.o -MD -MP -MF $(DEPDIR)/libfaircall_a-roster.Tpo -c -o libfaircall_a-roster.o `test -f 'roster.c' || echo '$(srcdir)/'`roster.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-roster.Tpo $(DEPDIR)/libfaircall_a-roster.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='roster.c' object='libfaircall_a-roster.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-roster.o `test -f 'roster.c' || echo '$(srcdir)/'`roster.c
-
-libfaircall_a-roster.obj: roster.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-roster.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-roster.Tpo -c -o libfaircall_a-roster.obj `if test -f 'roster.c'; then $(CYGPATH_W) 'roster.c'; else $(CYGPATH_W) '$(srcdir)/roster.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-roster.Tpo $(DEPDIR)/libfaircall_a-roster.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='roster.c' object='libfaircall_a-roster.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-roster.obj `if test -f 'roster.c'; then $(CYGPATH_W) 'roster.c'; else $(CYGPATH_W) '$(srcdir)/roster.c'; fi`
-
-libfaircall_a-faircall.o: faircall.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-faircall.o -MD -MP -MF $(DEPDIR)/libfaircall_a-faircall.Tpo -c -o libfaircall_a-faircall.o `test -f 'faircall.c' || echo '$(srcdir)/'`faircall.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-faircall.Tpo $(DEPDIR)/libfaircall_a-faircall.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faircall.c' object='libfaircall_a-faircall.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-faircall.o `test -f 'faircall.c' || echo '$(srcdir)/'`faircall.c
-
-libfaircall_a-faircall.obj: faircall.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-faircall.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-faircall.Tpo -c -o libfaircall_a-faircall.obj `if test -f 'faircall.c'; then $(CYGPATH_W) 'faircall.c'; else $(CYGPATH_W) '$(srcdir)/faircall.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-faircall.Tpo $(DEPDIR)/libfaircall_a-faircall.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='faircall.c' object='libfaircall_a-faircall.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-faircall.obj `if test -f 'faircall.c'; then $(CYGPATH_W) 'faircall.c'; else $(CYGPATH_W) '$(srcdir)/faircall.c'; fi`
-
-libfaircall_a-compare.o: compare.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-compare.o -MD -MP -MF $(DEPDIR)/libfaircall_a-compare.Tpo -c -o libfaircall_a-compare.o `test -f 'compare.c' || echo '$(srcdir)/'`compare.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-compare.Tpo $(DEPDIR)/libfaircall_a-compare.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compare.c' object='libfaircall_a-compare.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-compare.o `test -f 'compare.c' || echo '$(srcdir)/'`compare.c
-
-libfaircall_a-compare.obj: compare.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -MT libfaircall_a-compare.obj -MD -MP -MF $(DEPDIR)/libfaircall_a-compare.Tpo -c -o libfaircall_a-compare.obj `if test -f 'compare.c'; then $(CYGPATH_W) 'compare.c'; else $(CYGPATH_W) '$(srcdir)/compare.c'; fi`
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libfaircall_a-compare.Tpo $(DEPDIR)/libfaircall_a-compare.Po
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='compare.c' object='libfaircall_a-compare.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(libfaircall_a_CFLAGS) $(CFLAGS) -c -o libfaircall_a-compare.obj `if test -f 'compare.c'; then $(CYGPATH_W) 'compare.c'; else $(CYGPATH_W) '$(srcdir)/compare.c'; fi`
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(gfaircall_CFLAGS) $(CFLAGS) -c -o gfaircall-gmain.obj `if test -f 'gmain.c'; then $(CYGPATH_W) 'gmain.c'; else $(CYGPATH_W) '$(srcdir)/gmain.c'; fi`
 
 ID: $(am__tagged_files)
 	$(am__define_uniq_tagged_files); mkid -fID $$unique
@@ -525,8 +476,11 @@ distdir: $(DISTFILES)
 	done
 check-am: all-am
 check: check-am
-all-am: Makefile $(LIBRARIES)
+all-am: Makefile $(PROGRAMS)
 installdirs:
+	for dir in "$(DESTDIR)$(bindir)"; do \
+	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
+	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -559,7 +513,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-noinstLIBRARIES mostlyclean-am
+clean-am: clean-binPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -585,7 +539,7 @@ install-dvi: install-dvi-am
 
 install-dvi-am:
 
-install-exec-am:
+install-exec-am: install-binPROGRAMS
 
 install-html: install-html-am
 
@@ -624,22 +578,23 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am:
+uninstall-am: uninstall-binPROGRAMS
 
 .MAKE: install-am install-strip
 
-.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean clean-generic \
-	clean-noinstLIBRARIES cscopelist-am ctags ctags-am distclean \
-	distclean-compile distclean-generic distclean-tags distdir dvi \
-	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dvi install-dvi-am \
-	install-exec install-exec-am install-html install-html-am \
-	install-info install-info-am install-man install-pdf \
-	install-pdf-am install-ps install-ps-am install-strip \
-	installcheck installcheck-am installdirs maintainer-clean \
-	maintainer-clean-generic mostlyclean mostlyclean-compile \
-	mostlyclean-generic pdf pdf-am ps ps-am tags tags-am uninstall \
-	uninstall-am
+.PHONY: CTAGS GTAGS TAGS all all-am check check-am clean \
+	clean-binPROGRAMS clean-generic cscopelist-am ctags ctags-am \
+	distclean distclean-compile distclean-generic distclean-tags \
+	distdir dvi dvi-am html html-am info info-am install \
+	install-am install-binPROGRAMS install-data install-data-am \
+	install-dvi install-dvi-am install-exec install-exec-am \
+	install-html install-html-am install-info install-info-am \
+	install-man install-pdf install-pdf-am install-ps \
+	install-ps-am install-strip installcheck installcheck-am \
+	installdirs maintainer-clean maintainer-clean-generic \
+	mostlyclean mostlyclean-compile mostlyclean-generic pdf pdf-am \
+	ps ps-am tags tags-am uninstall uninstall-am \
+	uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 

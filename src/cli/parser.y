@@ -3,7 +3,7 @@
   #include <glib.h>
   #include <glib/gprintf.h>
 
-  #include <shared/faircall.h>
+  #include <faircall.h>
 
   int yylex (void);
   void yyerror (const char *s);
