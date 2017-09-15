@@ -4,6 +4,7 @@
   #include <glib/gprintf.h>
 
   #include <faircall.h>
+  #include "help.h"
 
   int yylex (void);
   void yyerror (const char *s);
@@ -226,7 +227,7 @@ list:
 
 help:
     HELP	{
-		  gchar **msg = get_help_message (0);
+		  gchar **msg = get_help_message (HELP_M);
 		  for (gchar **line = msg; line && *line; line++)
 		    g_printf ("%s", *line);
 		}
