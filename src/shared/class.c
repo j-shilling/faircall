@@ -222,7 +222,7 @@ faircall_class_info (struct Class const *const restrict class,
 
 struct Student *
 faircall_class_get_student (struct Class const *const restrict class,
-			    gchar const *const restrict name,
+			    gchar const *const name,
 			    GError **error)
 {
   if (!class)

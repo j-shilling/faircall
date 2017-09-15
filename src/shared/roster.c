@@ -1,3 +1,20 @@
+/*
+ *    This file is part of faircall.
+ *
+ *    faircall is free software: you can redistribute it and/or modify
+ *    it under the terms of the GNU General Public License as published by
+ *    the Free Software Foundation, either version 3 of the License, or
+ *    (at your option) any later version.
+ *
+ *    faircall is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    GNU General Public License for more details.
+ *
+ *    You should have received a copy of the GNU General Public License
+ *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "student.r"
 #include "roster-priv.h"
 #include "roster.r"
@@ -6,9 +23,8 @@
 #include <string.h>
 #include <glib.h>
 
-
 struct Roster *
-faircall_roster_new ()
+faircall_roster_new (void)
 {
   struct Roster *ret = g_malloc (sizeof (struct Roster));
   ret->arr = NULL;

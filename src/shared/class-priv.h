@@ -15,8 +15,8 @@
  *    along with faircall.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __CLASS_H__
-#define __CLASS_H__
+#ifndef __CLASS_PRIV_H__
+#define __CLASS_PRIV_H__
 
 #include <glib.h>
 
@@ -53,7 +53,7 @@ gchar **faircall_class_info (struct Class const *const restrict class,
 /* Returns the data associated with a student of a given name. Returns
    NULL on failure and sets *error */
 struct Student *faircall_class_get_student (struct Class const *const restrict class,
-				            gchar const *const restrict name,
+				            gchar const *const name,
 					    GError **error);
 
 /* Returns an array of the names of students in this class. On failure
@@ -113,4 +113,4 @@ gboolean faircall_class_call_student_by_name (struct Class *const restrict class
 					      gchar const *const restrict name,
 					      GError **error);
 
-#endif /* __CLASS_H__ */
+#endif /* __CLASS_PRIV_H__ */
