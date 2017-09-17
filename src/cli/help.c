@@ -16,6 +16,7 @@
  */
 
 #include <glib.h>
+#include <glib/gprintf.h>
 #include "help.h"
 
 static gchar *help[] =
@@ -74,20 +75,95 @@ static gchar *info[] =
 0
 };
 
-static gchar *list[];
-static gchar *open[];
-static gchar *close[];
-static gchar *undo[];
-static gchar *absent[];
-static gchar *even[];
-static gchar *call[];
-static gchar *quit[];
+static gchar *list[] =
+{
+"(l)ist\n",
+"\n",
+"If a class is opened, list students in that class. Otherwise list\n",
+"available classes.\n",
+0
+};
+
+static gchar *open[] =
+{
+"(o)pen [class name]\n",
+"\n",
+"Opens the specified class. If [class name] matches a saved class,\n",
+"that class will be opened. Otherwise, a new class will be created.\n",
+0
+};
+
+static gchar *close[] =
+{
+"(c)lose\n",
+"\n",
+"Closes the currently opened class. Closing a class saves it.\n",
+0
+};
+
+static gchar *undo[] =
+{
+"(u)ndo\n",
+"\n",
+"Undoes the effects of calling the last student. This is ment to\n",
+"be used when the called student is out of the room for some reason\n",
+"and should be called on later.\n",
+0
+};
+
+static gchar *absent[] =
+{
+"(a)bsent\n",
+"\n",
+"Undoes the effects of callign the last student and then removes\n",
+"that student from the class, but does not delete them from the saved\n",
+"data for the class. This ensures that they will not be called again\n",
+"until the class is closed a reopened. This should be used when the\n",
+"called on student is absent.\n",
+0
+};
+
+static gchar *even[] =
+{
+"(e)ven [true/false]\n",
+"\n",
+"Sets the currently open class to either ensure that all students are\n",
+"called exactly the same number of times (when true), or to ensure that\n",
+"no student is called an excessive number of times while alowing for\n",
+"some variation.\n",
+0
+};
+
+static gchar *call[] =
+{
+"call\n",
+"\n",
+"Calls the next student from the currently opened class.\n",
+"\n",
+"call [student name]\n",
+"\n",
+"Increments the number of times the given student has been called.\n",
+"\n",
+"call [integer]\n",
+"\n",
+"Calls the given number of students from the currently open class.\n",
+0
+};
+
+static gchar *quit[] =
+{
+"(q)uit\n",
+"\n",
+"Saves the open class and ends the program.\n",
+0
+};
 
 static gchar **help_menus[N_MENUS] =
 {
   help,
   add,
   delete,
+  info,
   list,
   open,
   close,
@@ -98,8 +174,9 @@ static gchar **help_menus[N_MENUS] =
   quit
 };
 
-gchar **
-faircall_help_menu (HelpMenu const menu)
+void
+faircall_print_help_menu (enum HelpMenu const menu)
 {
-  return help_menus[menu];
+  for (gchar **line = help_menus[menu]; line && *line; line++)
+    g_printf ("%s", *line);
 }

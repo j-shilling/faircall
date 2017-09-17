@@ -226,11 +226,19 @@ list:
 ;
 
 help:
-    HELP	{
-		  gchar **msg = get_help_message (HELP_M);
-		  for (gchar **line = msg; line && *line; line++)
-		    g_printf ("%s", *line);
-		}
+    HELP	{ faircall_print_help_menu (HELP_M); }
+|   HELP HELP	{ faircall_print_help_menu (HELP_M); }
+|   HELP ADD	{ faircall_print_help_menu (ADD_M); }
+|   HELP DELETE	{ faircall_print_help_menu (DELETE_M); }
+|   HELP INFO	{ faircall_print_help_menu (INFO_M); }
+|   HELP OPEN	{ faircall_print_help_menu (OPEN_M); }
+|   HELP CLOSE	{ faircall_print_help_menu (CLOSE_M); }
+|   HELP UNDO	{ faircall_print_help_menu (UNDO_M); }
+|   HELP ABSENT	{ faircall_print_help_menu (ABSENT_M); }
+|   HELP EVEN	{ faircall_print_help_menu (EVEN_M); }
+|   HELP CALL	{ faircall_print_help_menu (CALL_M); }
+|   HELP QUIT	{ faircall_print_help_menu (QUIT_M); }
+|   HELP LIST	{ faircall_print_help_menu (LIST_M); }
 ;
 %%
 
@@ -238,33 +246,4 @@ void
 yyerror (const char *s)
 {
   g_printf ("%s\n", s);
-}
-
-static gchar *help[] =
-{
-"\nAvailable Commands:\n",
-"\n",
-"(q)uit                 Exit the program.\n",
-"\n",
-"(l)ist                 List saved classes.\n",
-"(o)pen                 Open a saved class.\n",
-"(c)lose                Close an opened class.\n",
-"(i)nfo                 Show infomation about a class or student.\n"
-"(e)ven                 Configure a class to call students exactly the same number of times.\n"
-"\n",
-"call                   Call a student.\n",
-"(u)ndo                 Undo the last call.\n",
-"(a)bsent               Undo the last call and mark student as absent.\n",
-"\n",
-"For more information about a command, type \"(h)elp command\"\n",
-0
-};
-
-gchar **
-get_help_message (guint const i)
-{
-  switch (i)
-    {
-      default: return help;
-    }
 }

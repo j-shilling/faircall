@@ -99,7 +99,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
-am_faircall_OBJECTS = faircall-main.$(OBJEXT) \
+am_faircall_OBJECTS = faircall-main.$(OBJEXT) faircall-help.$(OBJEXT) \
 	faircall-parser.$(OBJEXT) faircall-scanner.$(OBJEXT)
 faircall_OBJECTS = $(am_faircall_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -290,6 +290,7 @@ top_srcdir = @top_srcdir@
 BUILT_SOURCES = parser.h
 AM_YFLAGS = -d
 faircall_SOURCES = main.c \
+		   help.c \
 		   parser.y \
 		   scanner.l
 
@@ -385,6 +386,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faircall-help.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faircall-main.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faircall-parser.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/faircall-scanner.Po@am__quote@
@@ -418,6 +420,20 @@ faircall-main.obj: main.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='main.c' object='faircall-main.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-main.obj `if test -f 'main.c'; then $(CYGPATH_W) 'main.c'; else $(CYGPATH_W) '$(srcdir)/main.c'; fi`
+
+faircall-help.o: help.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -MT faircall-help.o -MD -MP -MF $(DEPDIR)/faircall-help.Tpo -c -o faircall-help.o `test -f 'help.c' || echo '$(srcdir)/'`help.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/faircall-help.Tpo $(DEPDIR)/faircall-help.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='help.c' object='faircall-help.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-help.o `test -f 'help.c' || echo '$(srcdir)/'`help.c
+
+faircall-help.obj: help.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -MT faircall-help.obj -MD -MP -MF $(DEPDIR)/faircall-help.Tpo -c -o faircall-help.obj `if test -f 'help.c'; then $(CYGPATH_W) 'help.c'; else $(CYGPATH_W) '$(srcdir)/help.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/faircall-help.Tpo $(DEPDIR)/faircall-help.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	$(AM_V_CC)source='help.c' object='faircall-help.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(AM_V_CC@am__nodep@)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-help.obj `if test -f 'help.c'; then $(CYGPATH_W) 'help.c'; else $(CYGPATH_W) '$(srcdir)/help.c'; fi`
 
 faircall-parser.o: parser.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -MT faircall-parser.o -MD -MP -MF $(DEPDIR)/faircall-parser.Tpo -c -o faircall-parser.o `test -f 'parser.c' || echo '$(srcdir)/'`parser.c

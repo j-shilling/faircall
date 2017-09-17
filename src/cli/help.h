@@ -20,7 +20,7 @@
 
 #include <glib.h> // gchar
 
-enum
+enum HelpMenu
 {
   HELP_M,
   ADD_M,
@@ -36,8 +36,8 @@ enum
   QUIT_M,
 
   N_MENUS
-} HelpMenu;
+};
 
-gchar **faircall_help_menu (HelpMenu const menu);
+void    faircall_print_help_menu (enum HelpMenu const menu);
 
 #endif /* __HELP_H__ */

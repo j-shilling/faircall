@@ -3,6 +3,7 @@ AM_YFLAGS = -d
 bin_PROGRAMS = faircall
 
 faircall_SOURCES = main.c \
+		   help.c \
 		   parser.y \
 		   scanner.l
 faircall_CFLAGS = $(CFLAGS) -I$(srcdir)/../shared $(GLIB_CFLAGS) $(XML_CFLAGS)

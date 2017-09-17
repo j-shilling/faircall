@@ -69,13 +69,14 @@
   #include <glib/gprintf.h>
 
   #include <faircall.h>
+  #include "help.h"
 
   int yylex (void);
   void yyerror (const char *s);
 
   gchar **get_help_message (guint const i);
 
-#line 79 "parser.c" /* yacc.c:339  */
+#line 80 "parser.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -149,13 +150,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 16 "parser.y" /* yacc.c:355  */
+#line 17 "parser.y" /* yacc.c:355  */
 
   gchar *string;
   gboolean boolean;
   guint integer;
 
-#line 159 "parser.c" /* yacc.c:355  */
+#line 160 "parser.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -172,7 +173,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 176 "parser.c" /* yacc.c:358  */
+#line 177 "parser.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -412,18 +413,18 @@ union yyalloc
 #endif /* !YYCOPY_NEEDED */
 
 /* YYFINAL -- State number of the termination state.  */
-#define YYFINAL  33
+#define YYFINAL  45
 /* YYLAST -- Last index in YYTABLE.  */
-#define YYLAST   19
+#define YYLAST   31
 
 /* YYNTOKENS -- Number of terminals.  */
 #define YYNTOKENS  18
 /* YYNNTS -- Number of nonterminals.  */
 #define YYNNTS  14
 /* YYNRULES -- Number of rules.  */
-#define YYNRULES  28
+#define YYNRULES  40
 /* YYNSTATES -- Number of states.  */
-#define YYNSTATES  34
+#define YYNSTATES  46
 
 /* YYTRANSLATE[YYX] -- Symbol number corresponding to YYX as returned
    by yylex, with out-of-bounds checking.  */
@@ -471,9 +472,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    42,    42,    43,    44,    45,    46,    47,    48,    49,
-      50,    51,    52,    53,    57,    61,    73,    86,    99,   110,
-     121,   135,   152,   166,   175,   186,   198,   210,   228
+       0,    43,    43,    44,    45,    46,    47,    48,    49,    50,
+      51,    52,    53,    54,    58,    62,    74,    87,   100,   111,
+     122,   136,   153,   167,   176,   187,   199,   211,   229,   230,
+     231,   232,   233,   234,   235,   236,   237,   238,   239,   240,
+     241
 };
 #endif
 
@@ -499,10 +502,10 @@ static const yytype_uint16 yytoknum[] =
 };
 # endif
 
-#define YYPACT_NINF -5
+#define YYPACT_NINF -4
 
 #define yypact_value_is_default(Yystate) \
-  (!!((Yystate) == (-5)))
+  (!!((Yystate) == (-4)))
 
 #define YYTABLE_NINF -1
 
@@ -513,10 +516,11 @@ static const yytype_uint16 yytoknum[] =
      STATE-NUM.  */
 static const yytype_int8 yypact[] =
 {
-      -3,    -1,     1,     2,    -5,     3,    -5,    -5,    -5,    -4,
-      -2,    -5,    -5,    19,    -5,    -5,    -5,    -5,    -5,    -5,
-      -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,
-      -5,    -5,    -5,    -5
+      -3,    11,    13,    14,    -4,    15,    -4,    -4,    -4,     8,
+      10,     9,    -4,    31,    -4,    -4,    -4,    -4,    -4,    -4,
+      -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,
+      -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,
+      -4,    -4,    -4,    -4,    -4,    -4
 };
 
   /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
@@ -527,14 +531,15 @@ static const yytype_uint8 yydefact[] =
        0,     0,     0,    20,    27,     0,    18,    25,    26,     0,
       22,    28,    14,     0,     2,     3,     4,     5,     6,     7,
        8,     9,    10,    11,    12,    13,    16,    17,    21,    15,
-      19,    23,    24,     1
+      19,    23,    24,    30,    31,    32,    40,    33,    34,    35,
+      36,    37,    38,    29,    39,     1
 };
 
   /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int8 yypgoto[] =
 {
-      -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,    -5,
-      -5,    -5,    -5,    -5
+      -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,    -4,
+      -4,    -4,    -4,    -4
 };
 
   /* YYDEFGOTO[NTERM-NUM].  */
@@ -550,13 +555,17 @@ static const yytype_int8 yydefgoto[] =
 static const yytype_uint8 yytable[] =
 {
        1,     2,     3,     4,     5,     6,     7,     8,     9,    10,
-      11,    12,    30,    31,    26,    32,    27,    28,    29,    33
+      11,    12,    33,    34,    35,    36,    37,    38,    39,    40,
+      41,    42,    43,    44,    30,    31,    26,    32,    27,    28,
+      29,    45
 };
 
 static const yytype_uint8 yycheck[] =
 {
        3,     4,     5,     6,     7,     8,     9,    10,    11,    12,
-      13,    14,    16,    15,    15,    17,    15,    15,    15,     0
+      13,    14,     3,     4,     5,     6,     7,     8,     9,    10,
+      11,    12,    13,    14,    16,    15,    15,    17,    15,    15,
+      15,     0
 };
 
   /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
@@ -566,7 +575,8 @@ static const yytype_uint8 yystos[] =
        0,     3,     4,     5,     6,     7,     8,     9,    10,    11,
       12,    13,    14,    19,    20,    21,    22,    23,    24,    25,
       26,    27,    28,    29,    30,    31,    15,    15,    15,    15,
-      16,    15,    17,     0
+      16,    15,    17,     3,     4,     5,     6,     7,     8,     9,
+      10,    11,    12,    13,    14,     0
 };
 
   /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
@@ -574,7 +584,9 @@ static const yytype_uint8 yyr1[] =
 {
        0,    18,    19,    19,    19,    19,    19,    19,    19,    19,
       19,    19,    19,    19,    20,    21,    22,    23,    24,    25,
-      26,    26,    27,    27,    27,    28,    29,    30,    31
+      26,    26,    27,    27,    27,    28,    29,    30,    31,    31,
+      31,    31,    31,    31,    31,    31,    31,    31,    31,    31,
+      31
 };
 
   /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
@@ -582,7 +594,9 @@ static const yytype_uint8 yyr2[] =
 {
        0,     2,     1,     1,     1,     1,     1,     1,     1,     1,
        1,     1,     1,     1,     1,     2,     2,     2,     1,     2,
-       1,     2,     1,     2,     2,     1,     1,     1,     1
+       1,     2,     1,     2,     2,     1,     1,     1,     1,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+       2
 };
 
 
@@ -1259,13 +1273,13 @@ yyreduce:
   switch (yyn)
     {
         case 14:
-#line 57 "parser.y" /* yacc.c:1646  */
+#line 58 "parser.y" /* yacc.c:1646  */
     { exit (EXIT_SUCCESS); }
-#line 1265 "parser.c" /* yacc.c:1646  */
+#line 1279 "parser.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 61 "parser.y" /* yacc.c:1646  */
+#line 62 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_open_class ((yyvsp[0].string), &error))
@@ -1276,11 +1290,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1280 "parser.c" /* yacc.c:1646  */
+#line 1294 "parser.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 73 "parser.y" /* yacc.c:1646  */
+#line 74 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_add_student ((yyvsp[0].string), &error))
@@ -1291,11 +1305,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1295 "parser.c" /* yacc.c:1646  */
+#line 1309 "parser.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 86 "parser.y" /* yacc.c:1646  */
+#line 87 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_del_student ((yyvsp[0].string), &error))
@@ -1306,11 +1320,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1310 "parser.c" /* yacc.c:1646  */
+#line 1324 "parser.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 99 "parser.y" /* yacc.c:1646  */
+#line 100 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_close_class (&error))
@@ -1319,11 +1333,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1323 "parser.c" /* yacc.c:1646  */
+#line 1337 "parser.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 110 "parser.y" /* yacc.c:1646  */
+#line 111 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_set_forced_even ((yyvsp[0].boolean), &error))
@@ -1332,11 +1346,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1336 "parser.c" /* yacc.c:1646  */
+#line 1350 "parser.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 121 "parser.y" /* yacc.c:1646  */
+#line 122 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **info = faircall_info (NULL, &error);
@@ -1350,11 +1364,11 @@ yyreduce:
                     g_printf ("%s", *line);
 		  g_strfreev (info);
 		}
-#line 1354 "parser.c" /* yacc.c:1646  */
+#line 1368 "parser.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 135 "parser.y" /* yacc.c:1646  */
+#line 136 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **info = faircall_info ((yyvsp[0].string), &error);
@@ -1369,11 +1383,11 @@ yyreduce:
                     g_printf ("%s", *line);
 		  g_strfreev (info);
 		}
-#line 1373 "parser.c" /* yacc.c:1646  */
+#line 1387 "parser.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 152 "parser.y" /* yacc.c:1646  */
+#line 153 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar *name = faircall_call_student (&error);
@@ -1388,11 +1402,11 @@ yyreduce:
 		  g_free (name);
 		  if (error) g_error_free (error);
 		}
-#line 1392 "parser.c" /* yacc.c:1646  */
+#line 1406 "parser.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 166 "parser.y" /* yacc.c:1646  */
+#line 167 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  faircall_call_student_by_name ((yyvsp[0].string), &error);
@@ -1402,11 +1416,11 @@ yyreduce:
 		  if (error) g_error_free (error);
 		  g_free ((yyvsp[0].string));
 		}
-#line 1406 "parser.c" /* yacc.c:1646  */
+#line 1420 "parser.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 175 "parser.y" /* yacc.c:1646  */
+#line 176 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  faircall_call_n_students ((yyvsp[0].integer), &error);
@@ -1415,11 +1429,11 @@ yyreduce:
 		              error->message);
 		  if (error) g_error_free (error);
 		}
-#line 1419 "parser.c" /* yacc.c:1646  */
+#line 1433 "parser.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 186 "parser.y" /* yacc.c:1646  */
+#line 187 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_undo_call (&error))
@@ -1429,11 +1443,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1433 "parser.c" /* yacc.c:1646  */
+#line 1447 "parser.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 198 "parser.y" /* yacc.c:1646  */
+#line 199 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_mark_absent (&error))
@@ -1443,11 +1457,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1447 "parser.c" /* yacc.c:1646  */
+#line 1461 "parser.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 210 "parser.y" /* yacc.c:1646  */
+#line 211 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **list = faircall_list (&error);
@@ -1463,21 +1477,89 @@ yyreduce:
 
 		  if (list) g_strfreev (list);
 		}
-#line 1467 "parser.c" /* yacc.c:1646  */
+#line 1481 "parser.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 228 "parser.y" /* yacc.c:1646  */
-    {
-		  gchar **msg = get_help_message (0);
-		  for (gchar **line = msg; line && *line; line++)
-		    g_printf ("%s", *line);
-		}
-#line 1477 "parser.c" /* yacc.c:1646  */
+#line 229 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (HELP_M); }
+#line 1487 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 29:
+#line 230 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (HELP_M); }
+#line 1493 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 30:
+#line 231 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (ADD_M); }
+#line 1499 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 31:
+#line 232 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (DELETE_M); }
+#line 1505 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 32:
+#line 233 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (INFO_M); }
+#line 1511 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 33:
+#line 234 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (OPEN_M); }
+#line 1517 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 34:
+#line 235 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (CLOSE_M); }
+#line 1523 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 35:
+#line 236 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (UNDO_M); }
+#line 1529 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 36:
+#line 237 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (ABSENT_M); }
+#line 1535 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 37:
+#line 238 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (EVEN_M); }
+#line 1541 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 38:
+#line 239 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (CALL_M); }
+#line 1547 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 39:
+#line 240 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (QUIT_M); }
+#line 1553 "parser.c" /* yacc.c:1646  */
+    break;
+
+  case 40:
+#line 241 "parser.y" /* yacc.c:1646  */
+    { faircall_print_help_menu (LIST_M); }
+#line 1559 "parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 1481 "parser.c" /* yacc.c:1646  */
+#line 1563 "parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1705,40 +1787,11 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 234 "parser.y" /* yacc.c:1906  */
+#line 243 "parser.y" /* yacc.c:1906  */
 
 
 void
 yyerror (const char *s)
 {
   g_printf ("%s\n", s);
-}
-
-static gchar *help[] =
-{
-"\nAvailable Commands:\n",
-"\n",
-"(q)uit                 Exit the program.\n",
-"\n",
-"(l)ist                 List saved classes.\n",
-"(o)pen                 Open a saved class.\n",
-"(c)lose                Close an opened class.\n",
-"(i)nfo                 Show infomation about a class or student.\n"
-"(e)ven                 Configure a class to call students exactly the same number of times.\n"
-"\n",
-"call                   Call a student.\n",
-"(u)ndo                 Undo the last call.\n",
-"(a)bsent               Undo the last call and mark student as absent.\n",
-"\n",
-"For more information about a command, type \"(h)elp command\"\n",
-0
-};
-
-gchar **
-get_help_message (guint const i)
-{
-  switch (i)
-    {
-      default: return help;
-    }
 }

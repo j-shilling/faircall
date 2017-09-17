@@ -18,7 +18,7 @@
 #ifndef __ROSTER_PRIV_H__
 #define __ROSTER_PRIV_H__
 
-#include <glib> // guint
+#include <glib.h> // guint
                 // gsize
 #include "student-priv.h" // struct Student
 
