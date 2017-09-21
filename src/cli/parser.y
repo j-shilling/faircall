@@ -175,11 +175,14 @@ call:
 		}
  |  CALL INT	{
 		  GError *error = NULL;
-		  faircall_call_n_students ($<integer>2, &error);
+		  gchar **names = faircall_call_n_students ($<integer>2, &error);
 		  if (error)
 		    g_printf ("Error calling students: %s\n",
 		              error->message);
 		  if (error) g_error_free (error);
+		  for (gchar **name = names; name && *name; name++)
+		    g_printf ("%s\n", *name);
+		  g_strfreev (names);
 		}
 ;
 
@@ -219,7 +222,7 @@ list:
 		  for (gchar **line = list;
 		       line && *line;
 		       line ++)
-		    g_printf ("%s", *line);
+		    g_printf ("%s\n", *line);
 
 		  if (list) g_strfreev (list);
 		}

@@ -259,7 +259,7 @@ faircall_class_list (struct Class const *const restrict class,
     g_malloc (sizeof (gchar *) * (size + 1));
 
   for (int i = 0; i < class->r->size; i++)
-    ret[i] = g_strdup_printf ("%s\n",
+    ret[i] = g_strdup_printf ("%s",
 			      class->r->arr[i]->name);
 
   ret[size] = 0;

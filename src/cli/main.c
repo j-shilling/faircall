@@ -38,6 +38,29 @@ static GOptionEntry entries[] =
 static void cleanup(void);
 static void showinfo(void);
 
+static char **name_completion (const char *, int, int);
+static char *name_generator (const char *, int);
+
+static gchar **class = NULL;
+static gchar **students = NULL;
+static gchar *commands[] =
+{
+  "quit",
+  "list",
+  "open",
+  "close",
+  "info",
+  "even",
+  "add",
+  "delete",
+  "call",
+  "undo",
+  "absent",
+  "help",
+  NULL
+};
+static gchar **symbols = NULL;
+
 int
 main (int argc, char *argv[])
 {
@@ -124,6 +147,7 @@ main (int argc, char *argv[])
       exit (EXIT_SUCCESS);
     }
 
+  rl_attempted_completion_function = name_completion;
   while (TRUE)
     {
       static gchar const *const call = "call";
@@ -170,4 +194,44 @@ showinfo (void)
     }
 
   g_strfreev (info);
+}
+
+static char **
+name_completion (const char *text, int start, int en)
+{
+  rl_attempted_completion_over = 1;
+  
+  if (start > 1)
+    symbols = faircall_list (NULL);
+
+  char **ret = rl_completion_matches (text, name_generator);
+
+  g_strfreev (symbols);
+  symbols = NULL;
+  return ret;
+}
+
+static char *
+name_generator (const char *text, int state)
+{
+  static int list_index, len;
+  char *line;
+
+  if (!state)
+    {
+      list_index = 0;
+      len = strlen (text);
+    }
+
+  char **list = symbols ? symbols : commands;
+
+  while ((line = list[list_index++]))
+    {
+      if (strncmp (line, text, len) == 0)
+	{
+	  return g_strdup (line);
+	}
+    }
+
+  return NULL;
 }
