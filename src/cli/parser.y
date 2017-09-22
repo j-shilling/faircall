@@ -5,6 +5,7 @@
 
   #include <faircall.h>
   #include "help.h"
+  #include "table.h"
 
   int yylex (void);
   void yyerror (const char *s);
@@ -128,8 +129,8 @@ info:
 		      g_error_free (error);
 		    }
 
-                  for (gchar **line = info; line && *line; line++)
-                    g_printf ("%s", *line);
+                  
+		  faircall_print_table (info, 1);
 		  g_strfreev (info);
 		}
 
@@ -143,8 +144,8 @@ info:
 		    }
 		  g_free ($<string>2);
 
-                  for (gchar **line = info; line && *line; line++)
-                    g_printf ("%s", *line);
+
+		  faircall_print_table (info, 1);
 		  g_strfreev (info);
 		}
 ;

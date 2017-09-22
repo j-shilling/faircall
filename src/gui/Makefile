@@ -174,7 +174,7 @@ AUTOMAKE = ${SHELL} /home/jake/projects/faircall/missing automake-1.15
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -O0 -ggdb
 CHECK_CFLAGS = -pthread
 CHECK_LIBS = -lcheck_pic -pthread -lrt -lm -lsubunit
 CPP = gcc -E

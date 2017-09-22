@@ -100,7 +100,8 @@ CONFIG_CLEAN_VPATH_FILES =
 am__installdirs = "$(DESTDIR)$(bindir)"
 PROGRAMS = $(bin_PROGRAMS)
 am_faircall_OBJECTS = faircall-main.$(OBJEXT) faircall-help.$(OBJEXT) \
-	faircall-parser.$(OBJEXT) faircall-scanner.$(OBJEXT)
+	faircall-parser.$(OBJEXT) faircall-scanner.$(OBJEXT) \
+	faircall-table.$(OBJEXT)
 faircall_OBJECTS = $(am_faircall_OBJECTS)
 am__DEPENDENCIES_1 =
 faircall_DEPENDENCIES = $(srcdir)/../shared/libfaircall.a \
@@ -191,7 +192,7 @@ AUTOMAKE = ${SHELL} /home/jake/projects/faircall/missing automake-1.15
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -O0 -ggdb
 CHECK_CFLAGS = -pthread
 CHECK_LIBS = -lcheck_pic -pthread -lrt -lm -lsubunit
 CPP = gcc -E
@@ -279,6 +280,7 @@ pdfdir = ${docdir}
 prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
+runstatedir = ${localstatedir}/run
 sbindir = ${exec_prefix}/sbin
 sharedstatedir = ${prefix}/com
 srcdir = .
@@ -292,7 +294,8 @@ AM_YFLAGS = -d
 faircall_SOURCES = main.c \
 		   help.c \
 		   parser.y \
-		   scanner.l
+		   scanner.l \
+		   table.c
 
 faircall_CFLAGS = $(CFLAGS) -I$(srcdir)/../shared $(GLIB_CFLAGS) $(XML_CFLAGS)
 faircall_LDADD = $(srcdir)/../shared/libfaircall.a $(GLIB_LIBS) $(XML_LIBS) -lreadline
@@ -390,6 +393,7 @@ include ./$(DEPDIR)/faircall-help.Po
 include ./$(DEPDIR)/faircall-main.Po
 include ./$(DEPDIR)/faircall-parser.Po
 include ./$(DEPDIR)/faircall-scanner.Po
+include ./$(DEPDIR)/faircall-table.Po
 
 .c.o:
 	$(AM_V_CC)depbase=`echo $@ | sed 's|[^/]*$$|$(DEPDIR)/&|;s|\.o$$||'`;\
@@ -462,6 +466,20 @@ faircall-scanner.obj: scanner.c
 #	$(AM_V_CC)source='scanner.c' object='faircall-scanner.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-scanner.obj `if test -f 'scanner.c'; then $(CYGPATH_W) 'scanner.c'; else $(CYGPATH_W) '$(srcdir)/scanner.c'; fi`
+
+faircall-table.o: table.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -MT faircall-table.o -MD -MP -MF $(DEPDIR)/faircall-table.Tpo -c -o faircall-table.o `test -f 'table.c' || echo '$(srcdir)/'`table.c
+	$(AM_V_at)$(am__mv) $(DEPDIR)/faircall-table.Tpo $(DEPDIR)/faircall-table.Po
+#	$(AM_V_CC)source='table.c' object='faircall-table.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-table.o `test -f 'table.c' || echo '$(srcdir)/'`table.c
+
+faircall-table.obj: table.c
+	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -MT faircall-table.obj -MD -MP -MF $(DEPDIR)/faircall-table.Tpo -c -o faircall-table.obj `if test -f 'table.c'; then $(CYGPATH_W) 'table.c'; else $(CYGPATH_W) '$(srcdir)/table.c'; fi`
+	$(AM_V_at)$(am__mv) $(DEPDIR)/faircall-table.Tpo $(DEPDIR)/faircall-table.Po
+#	$(AM_V_CC)source='table.c' object='faircall-table.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(AM_V_CC_no)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(faircall_CFLAGS) $(CFLAGS) -c -o faircall-table.obj `if test -f 'table.c'; then $(CYGPATH_W) 'table.c'; else $(CYGPATH_W) '$(srcdir)/table.c'; fi`
 
 .l.c:
 	$(AM_V_LEX)$(am__skiplex) $(SHELL) $(YLWRAP) $< $(LEX_OUTPUT_ROOT).c $@ -- $(LEXCOMPILE)

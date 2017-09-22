@@ -70,13 +70,14 @@
 
   #include <faircall.h>
   #include "help.h"
+  #include "table.h"
 
   int yylex (void);
   void yyerror (const char *s);
 
   gchar **get_help_message (guint const i);
 
-#line 80 "parser.c" /* yacc.c:339  */
+#line 81 "parser.c" /* yacc.c:339  */
 
 # ifndef YY_NULLPTR
 #  if defined __cplusplus && 201103L <= __cplusplus
@@ -150,13 +151,13 @@ extern int yydebug;
 
 union YYSTYPE
 {
-#line 17 "parser.y" /* yacc.c:355  */
+#line 18 "parser.y" /* yacc.c:355  */
 
   gchar *string;
   gboolean boolean;
   guint integer;
 
-#line 160 "parser.c" /* yacc.c:355  */
+#line 161 "parser.c" /* yacc.c:355  */
 };
 
 typedef union YYSTYPE YYSTYPE;
@@ -173,7 +174,7 @@ int yyparse (void);
 
 /* Copy the second part of user declarations.  */
 
-#line 177 "parser.c" /* yacc.c:358  */
+#line 178 "parser.c" /* yacc.c:358  */
 
 #ifdef short
 # undef short
@@ -472,11 +473,11 @@ static const yytype_uint8 yytranslate[] =
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    43,    43,    44,    45,    46,    47,    48,    49,    50,
-      51,    52,    53,    54,    58,    62,    74,    87,   100,   111,
-     122,   136,   153,   167,   176,   190,   202,   214,   232,   233,
-     234,   235,   236,   237,   238,   239,   240,   241,   242,   243,
-     244
+       0,    44,    44,    45,    46,    47,    48,    49,    50,    51,
+      52,    53,    54,    55,    59,    63,    75,    88,   101,   112,
+     123,   137,   154,   168,   177,   191,   203,   215,   233,   234,
+     235,   236,   237,   238,   239,   240,   241,   242,   243,   244,
+     245
 };
 #endif
 
@@ -1273,13 +1274,13 @@ yyreduce:
   switch (yyn)
     {
         case 14:
-#line 58 "parser.y" /* yacc.c:1646  */
+#line 59 "parser.y" /* yacc.c:1646  */
     { exit (EXIT_SUCCESS); }
-#line 1279 "parser.c" /* yacc.c:1646  */
+#line 1280 "parser.c" /* yacc.c:1646  */
     break;
 
   case 15:
-#line 62 "parser.y" /* yacc.c:1646  */
+#line 63 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_open_class ((yyvsp[0].string), &error))
@@ -1290,11 +1291,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1294 "parser.c" /* yacc.c:1646  */
+#line 1295 "parser.c" /* yacc.c:1646  */
     break;
 
   case 16:
-#line 74 "parser.y" /* yacc.c:1646  */
+#line 75 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_add_student ((yyvsp[0].string), &error))
@@ -1305,11 +1306,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1309 "parser.c" /* yacc.c:1646  */
+#line 1310 "parser.c" /* yacc.c:1646  */
     break;
 
   case 17:
-#line 87 "parser.y" /* yacc.c:1646  */
+#line 88 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_del_student ((yyvsp[0].string), &error))
@@ -1320,11 +1321,11 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 		}
-#line 1324 "parser.c" /* yacc.c:1646  */
+#line 1325 "parser.c" /* yacc.c:1646  */
     break;
 
   case 18:
-#line 100 "parser.y" /* yacc.c:1646  */
+#line 101 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_close_class (&error))
@@ -1333,11 +1334,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1337 "parser.c" /* yacc.c:1646  */
+#line 1338 "parser.c" /* yacc.c:1646  */
     break;
 
   case 19:
-#line 111 "parser.y" /* yacc.c:1646  */
+#line 112 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_set_forced_even ((yyvsp[0].boolean), &error))
@@ -1346,11 +1347,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1350 "parser.c" /* yacc.c:1646  */
+#line 1351 "parser.c" /* yacc.c:1646  */
     break;
 
   case 20:
-#line 122 "parser.y" /* yacc.c:1646  */
+#line 123 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **info = faircall_info (NULL, &error);
@@ -1360,15 +1361,15 @@ yyreduce:
 		      g_error_free (error);
 		    }
 
-                  for (gchar **line = info; line && *line; line++)
-                    g_printf ("%s", *line);
+                  
+		  faircall_print_table (info, 1);
 		  g_strfreev (info);
 		}
-#line 1368 "parser.c" /* yacc.c:1646  */
+#line 1369 "parser.c" /* yacc.c:1646  */
     break;
 
   case 21:
-#line 136 "parser.y" /* yacc.c:1646  */
+#line 137 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **info = faircall_info ((yyvsp[0].string), &error);
@@ -1379,15 +1380,15 @@ yyreduce:
 		    }
 		  g_free ((yyvsp[0].string));
 
-                  for (gchar **line = info; line && *line; line++)
-                    g_printf ("%s", *line);
+
+		  faircall_print_table (info, 1);
 		  g_strfreev (info);
 		}
-#line 1387 "parser.c" /* yacc.c:1646  */
+#line 1388 "parser.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 153 "parser.y" /* yacc.c:1646  */
+#line 154 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar *name = faircall_call_student (&error);
@@ -1402,11 +1403,11 @@ yyreduce:
 		  g_free (name);
 		  if (error) g_error_free (error);
 		}
-#line 1406 "parser.c" /* yacc.c:1646  */
+#line 1407 "parser.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 167 "parser.y" /* yacc.c:1646  */
+#line 168 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  faircall_call_student_by_name ((yyvsp[0].string), &error);
@@ -1416,11 +1417,11 @@ yyreduce:
 		  if (error) g_error_free (error);
 		  g_free ((yyvsp[0].string));
 		}
-#line 1420 "parser.c" /* yacc.c:1646  */
+#line 1421 "parser.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 176 "parser.y" /* yacc.c:1646  */
+#line 177 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **names = faircall_call_n_students ((yyvsp[0].integer), &error);
@@ -1432,11 +1433,11 @@ yyreduce:
 		    g_printf ("%s\n", *name);
 		  g_strfreev (names);
 		}
-#line 1436 "parser.c" /* yacc.c:1646  */
+#line 1437 "parser.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 190 "parser.y" /* yacc.c:1646  */
+#line 191 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_undo_call (&error))
@@ -1446,11 +1447,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1450 "parser.c" /* yacc.c:1646  */
+#line 1451 "parser.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 202 "parser.y" /* yacc.c:1646  */
+#line 203 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  if (!faircall_mark_absent (&error))
@@ -1460,11 +1461,11 @@ yyreduce:
 		      g_error_free (error);
 		    }
 		}
-#line 1464 "parser.c" /* yacc.c:1646  */
+#line 1465 "parser.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 214 "parser.y" /* yacc.c:1646  */
+#line 215 "parser.y" /* yacc.c:1646  */
     {
 		  GError *error = NULL;
 		  gchar **list = faircall_list (&error);
@@ -1480,89 +1481,89 @@ yyreduce:
 
 		  if (list) g_strfreev (list);
 		}
-#line 1484 "parser.c" /* yacc.c:1646  */
+#line 1485 "parser.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 232 "parser.y" /* yacc.c:1646  */
+#line 233 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (HELP_M); }
-#line 1490 "parser.c" /* yacc.c:1646  */
+#line 1491 "parser.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 233 "parser.y" /* yacc.c:1646  */
+#line 234 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (HELP_M); }
-#line 1496 "parser.c" /* yacc.c:1646  */
+#line 1497 "parser.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 234 "parser.y" /* yacc.c:1646  */
+#line 235 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (ADD_M); }
-#line 1502 "parser.c" /* yacc.c:1646  */
+#line 1503 "parser.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 235 "parser.y" /* yacc.c:1646  */
+#line 236 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (DELETE_M); }
-#line 1508 "parser.c" /* yacc.c:1646  */
+#line 1509 "parser.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 236 "parser.y" /* yacc.c:1646  */
+#line 237 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (INFO_M); }
-#line 1514 "parser.c" /* yacc.c:1646  */
+#line 1515 "parser.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 237 "parser.y" /* yacc.c:1646  */
+#line 238 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (OPEN_M); }
-#line 1520 "parser.c" /* yacc.c:1646  */
+#line 1521 "parser.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 238 "parser.y" /* yacc.c:1646  */
+#line 239 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (CLOSE_M); }
-#line 1526 "parser.c" /* yacc.c:1646  */
+#line 1527 "parser.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 239 "parser.y" /* yacc.c:1646  */
+#line 240 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (UNDO_M); }
-#line 1532 "parser.c" /* yacc.c:1646  */
+#line 1533 "parser.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 240 "parser.y" /* yacc.c:1646  */
+#line 241 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (ABSENT_M); }
-#line 1538 "parser.c" /* yacc.c:1646  */
+#line 1539 "parser.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 241 "parser.y" /* yacc.c:1646  */
+#line 242 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (EVEN_M); }
-#line 1544 "parser.c" /* yacc.c:1646  */
+#line 1545 "parser.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 242 "parser.y" /* yacc.c:1646  */
+#line 243 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (CALL_M); }
-#line 1550 "parser.c" /* yacc.c:1646  */
+#line 1551 "parser.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 243 "parser.y" /* yacc.c:1646  */
+#line 244 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (QUIT_M); }
-#line 1556 "parser.c" /* yacc.c:1646  */
+#line 1557 "parser.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 244 "parser.y" /* yacc.c:1646  */
+#line 245 "parser.y" /* yacc.c:1646  */
     { faircall_print_help_menu (LIST_M); }
-#line 1562 "parser.c" /* yacc.c:1646  */
+#line 1563 "parser.c" /* yacc.c:1646  */
     break;
 
 
-#line 1566 "parser.c" /* yacc.c:1646  */
+#line 1567 "parser.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1790,7 +1791,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 246 "parser.y" /* yacc.c:1906  */
+#line 247 "parser.y" /* yacc.c:1906  */
 
 
 void
