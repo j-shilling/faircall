@@ -119,4 +119,17 @@ public class DataContainer {
 		return this.sections.getSelected();
 	}
 	
+	public boolean getMode () {
+		Optional<Section> selected = this.getSelected();
+		return selected.isPresent() ? selected.get().getRandom() : true;
+	}
+	
+	public void setMode (boolean mode) {
+		Optional<Section> selected = this.getSelected();
+		if (selected.isPresent()) {
+			selected.get().setRandom(mode);
+			this.dao.save(this.sections);
+		}
+	}
+	
 }

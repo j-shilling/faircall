@@ -16,11 +16,14 @@ public class Section {
 	private final String name;
 	@JsonProperty ("students")
 	private final Map<String, Integer> students;
+	@JsonProperty ("random")
+	private boolean random;
 	
 	@JsonCreator
 	public Section (
 			@JsonProperty ("name") String name, 
-			@JsonProperty("students") Map<String, Integer> students) {
+			@JsonProperty("students") Map<String, Integer> students,
+			@JsonProperty ("random") Boolean random) {
 		Preconditions.checkNotNull(name, "Every class must have a name.");
 		Preconditions.checkArgument(!name.isEmpty(), "Every class must have a name.");
 		
@@ -34,10 +37,20 @@ public class Section {
 				}
 			}
 		}
+		
+		this.random = random == null ? true : random;
 	}
 	
 	public String getName() {
 		return this.name;
+	}
+	
+	public boolean getRandom() {
+		return this.random;
+	}
+	
+	public void setRandom (boolean random) {
+		this.random = random;
 	}
 	
 	@JsonIgnore

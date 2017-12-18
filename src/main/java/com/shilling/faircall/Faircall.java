@@ -1,28 +1,22 @@
 package com.shilling.faircall;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Optional;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
-import com.shilling.faircall.dao.SectionsDAO;
 import com.shilling.faircall.guice.FaircallModule;
 import com.shilling.faircall.model.Section;
-import com.shilling.faircall.model.Sections;
-
 import javafx.application.Application;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
+import javafx.geometry.VPos;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -33,8 +27,10 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.RowConstraints;
 import javafx.scene.text.Font;
 import javafx.scene.text.TextAlignment;
 
@@ -55,12 +51,13 @@ public class Faircall extends Application
 	public void start(Stage stage) throws Exception {
 		BorderPane pane = new BorderPane ();
 		HBox actionBar = new HBox();
-		VBox content = new VBox();
+		GridPane content = new GridPane();
 		
 		ListView<String> students = new ListView<> (this.data.getObservableStudents());
 		pane.setLeft(students);
 		pane.setTop (actionBar);
 		pane.setCenter(content);
+		pane.setCenterShape(true);
 		
 		actionBar.setPadding (new Insets (15, 12, 15, 12));
 		actionBar.setSpacing(10);
@@ -99,6 +96,36 @@ public class Faircall extends Application
 			
 		});
 		
+		ChoiceBox<Boolean> mode = new ChoiceBox<Boolean> ();
+		mode.getItems().addAll(true, false);
+		mode.setConverter(new StringConverter<Boolean> () {
+
+			@Override
+			public Boolean fromString(String arg0) {
+				return "Call randomly".equals(arg0);
+			}
+
+			@Override
+			public String toString(Boolean arg0) {
+				if (arg0)
+					return new String ("Call randomly");
+				else
+					return new String ("Call evenly");
+			}
+			
+		});
+		mode.getSelectionModel().select(true);
+		mode.getSelectionModel().selectedItemProperty().addListener(
+				new ChangeListener<Boolean> () {
+
+					@Override
+					public void changed(ObservableValue<? extends Boolean> arg0,
+							Boolean old, Boolean cur) {
+						Faircall.this.data.setMode(cur);
+					}
+					
+				});
+		
 		ChoiceBox<String> classes = 
 				new ChoiceBox<String> (this.data.getObservableClasses());
 		classes.setTooltip(new Tooltip ("Select open class"));
@@ -113,6 +140,7 @@ public class Faircall extends Application
 					@Override
 					public void changed(ObservableValue<? extends String> arg0, String old, String selection) {
 						Faircall.this.data.select(selection);
+						mode.getSelectionModel().select(Faircall.this.data.getMode());
 					}
 					
 				});
@@ -149,7 +177,14 @@ public class Faircall extends Application
 			
 		});
 		
-		actionBar.getChildren().addAll(addClass, addStudent, classes, absent, deleteClass, deleteStudent);
+		actionBar.getChildren().addAll(
+				addClass, 
+				addStudent,
+				classes, 
+				absent, 
+				deleteClass, 
+				deleteStudent,
+				mode);
 		
 		Label name = new Label ("Hello, World!");
 		name.setWrapText(true);
@@ -158,7 +193,31 @@ public class Faircall extends Application
 		
 		name.setFont(new Font ("Arial", 40));
 		
-		content.getChildren().add(name);
+		Button undo = new Button ("Undo");
+		Button next = new Button ("Next");
+		
+		ColumnConstraints col1 = new ColumnConstraints();
+		col1.setPercentWidth(50);
+		col1.setHalignment(HPos.LEFT);
+		ColumnConstraints col2 = new ColumnConstraints();
+		col2.setPercentWidth(50);
+		col2.setHalignment(HPos.RIGHT);
+		
+		RowConstraints row1 = new RowConstraints();
+		row1.setPercentHeight(80);
+		row1.setValignment(VPos.CENTER);
+		RowConstraints row2 = new RowConstraints();
+		row2.setPercentHeight(20);
+		row2.setValignment(VPos.CENTER);
+		
+		content.getColumnConstraints().addAll(col1, col2);
+		content.getRowConstraints().addAll(row1, row2);
+		
+		content.add(name, 0, 0, 2, 1);
+		content.add(undo, 0, 1);
+		content.add(next, 1, 1);
+		
+		content.setPadding(new Insets (15, 12, 15, 12));
 		
 		stage.setTitle("Faircall");
 		stage.setScene (new Scene (pane, 600, 300));
