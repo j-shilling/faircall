@@ -3,6 +3,7 @@ package com.shilling.faircall.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.shilling.faircall.Caller;
+import com.shilling.faircall.ContentArea;
 import com.shilling.faircall.Math;
 import com.shilling.faircall.DataContainer;
 import com.shilling.faircall.StudentListView;
@@ -18,6 +19,7 @@ public class FaircallModule extends AbstractModule {
 		this.bind(Caller.class);
 		this.bind(Math.class);
 		this.bind(StudentListView.class);
+		this.bind(ContentArea.class);
 	}
 	
 	@Provides
