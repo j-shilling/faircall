@@ -70,8 +70,10 @@ public class ContentArea extends GridPane {
 			@Override
 			public void handle(ActionEvent arg0) {
 				Optional<String> name = ContentArea.this.data.lastCalled();
-				if (name.isPresent())
+				if (name.isPresent()) {
+					ContentArea.this.data.undo();
 					ContentArea.this.data.absentStudent(name.get());
+				}
 				absent.setDisable(true);
 			}
 			
@@ -115,7 +117,7 @@ public class ContentArea extends GridPane {
 
 			@Override
 			public void onChanged(Change<? extends Student> change) {
-				next.setDisable(ContentArea.this.students.size() < 2);
+				next.setDisable(ContentArea.this.students.size() < 3);
 			}
 			
 		});

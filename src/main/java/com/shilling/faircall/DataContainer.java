@@ -49,7 +49,7 @@ public class DataContainer {
 
 		@Override
 		public int compare(Student x, Student y) {
-			return Integer.compare(x.getCalled(), y.getCalled());
+			return x.compareTo(y);
 		}
 		
 	};
@@ -189,7 +189,7 @@ public class DataContainer {
 	public Optional<String> lastCalled () {
 		Optional<Section> cur = this.getSelected();
 		if (cur.isPresent())
-			return Optional.of(cur.get().getLastCalled());
+			return Optional.ofNullable(cur.get().getLastCalled());
 		else
 			return Optional.empty();
 	}

@@ -15,7 +15,7 @@ public class Faircall extends Application
 	
 	public static final Injector injector = Guice.createInjector(new FaircallModule());
 	
-	private final StudentListView students = injector.getInstance(StudentListView.class);
+	private final StudentView students = injector.getInstance(StudentView.class);
 	private final ContentArea content = injector.getInstance(ContentArea.class);
 	private final ToolBar toolBar = injector.getInstance(ToolBar.class);
 	

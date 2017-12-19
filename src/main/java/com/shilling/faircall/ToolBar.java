@@ -25,10 +25,10 @@ import javafx.util.StringConverter;
 public class ToolBar extends VBox {
 
 	private final DataContainer data;
-	private final StudentListView students;
+	private final StudentView students;
 	
 	@Inject
-	private ToolBar (DataContainer data, StudentListView students) {
+	private ToolBar (DataContainer data, StudentView students) {
 		this.data = data;
 		this.students = students;
 		

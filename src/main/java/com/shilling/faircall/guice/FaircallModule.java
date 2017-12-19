@@ -6,7 +6,7 @@ import com.shilling.faircall.Caller;
 import com.shilling.faircall.ContentArea;
 import com.shilling.faircall.Math;
 import com.shilling.faircall.DataContainer;
-import com.shilling.faircall.StudentListView;
+import com.shilling.faircall.StudentView;
 import com.shilling.faircall.ToolBar;
 import com.shilling.faircall.dao.SectionsDAO;
 import com.shilling.faircall.model.Sections;
@@ -19,7 +19,7 @@ public class FaircallModule extends AbstractModule {
 		this.bind(DataContainer.class);
 		this.bind(Caller.class);
 		this.bind(Math.class);
-		this.bind(StudentListView.class);
+		this.bind(StudentView.class);
 		this.bind(ContentArea.class);
 		this.bind(ToolBar.class);
 	}
