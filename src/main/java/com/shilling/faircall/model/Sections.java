@@ -33,7 +33,7 @@ public class Sections {
 		
 		if (sections != null) {
 			for (Section s : sections) {
-				this.sections.put(s.getName(), s);
+				this.sections.put(s.getName(), s.copy());
 			}
 		}
 	}
@@ -85,5 +85,9 @@ public class Sections {
 	
 	public void unselect () {
 		this.cur = null;
+	}
+	
+	public Sections copy () {
+		return new Sections (this.cur, this.getSections());
 	}
 }

@@ -185,7 +185,7 @@ public class Faircall extends Application
 				deleteStudent,
 				mode);
 		
-		Label name = new Label ("Hello, World!");
+		Label name = new Label (this.data.lastCalled().isPresent() ? this.data.lastCalled().get() : "");
 		name.setWrapText(true);
 		name.setContentDisplay(ContentDisplay.CENTER);
 		name.setTextAlignment(TextAlignment.CENTER);
@@ -193,6 +193,15 @@ public class Faircall extends Application
 		name.setFont(new Font ("Arial", 40));
 		
 		Button undo = new Button ("Undo");
+		undo.setOnAction(new EventHandler<ActionEvent> () {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				Faircall.this.data.undo();
+				name.setText(data.lastCalled().isPresent() ? data.lastCalled().get() : "");
+			}
+			
+		});
 		Button next = new Button ("Next");
 		next.setOnAction(new EventHandler<ActionEvent> () {
 

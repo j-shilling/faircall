@@ -3,6 +3,7 @@ package com.shilling.faircall;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.Stack;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -19,11 +20,13 @@ import javafx.collections.transformation.SortedList;
 @Singleton
 public class DataContainer {
 
-	private final Sections sections;
+	private Sections sections;
 	private final SectionsDAO dao;
 	private final Caller caller;
 	private final ObservableList<String> classes;
 	private final ObservableList<Student> students;
+	
+	private final Stack<Sections> history;
 	
 	private final Comparator<String> strcmp = new Comparator<String> () {
 		
@@ -47,6 +50,7 @@ public class DataContainer {
 	public DataContainer (Sections sections, Caller caller, SectionsDAO dao) {
 		Preconditions.checkNotNull(sections);
 		
+		this.history = new Stack<>();
 		this.sections = sections;
 		this.caller = caller;
 		this.dao = dao;
@@ -156,6 +160,8 @@ public class DataContainer {
 						cur.get().getRandom());
 		
 		if (name.isPresent()) {
+			this.history.push(this.sections.copy());
+			
 			cur.get().calledStudent(name.get());
 			cur.get().setLastCalled(name.get());
 			this.students.clear();
@@ -164,6 +170,31 @@ public class DataContainer {
 		}
 		
 		return name;
+	}
+	
+	public Optional<String> lastCalled () {
+		Optional<Section> cur = this.getSelected();
+		if (cur.isPresent())
+			return Optional.of(cur.get().getLastCalled());
+		else
+			return Optional.empty();
+	}
+	
+	public boolean canUndo () {
+		return !this.history.isEmpty();
+	}
+	
+	public void undo () {
+		if (this.history.isEmpty())
+			return;
+		
+		this.sections = this.history.pop();
+		this.dao.save(this.sections);
+		
+		this.students.clear();
+		Optional<Section> cur = this.getSelected();
+		if (cur.isPresent())
+			this.students.addAll(cur.get().getStudents());
 	}
 	
 }

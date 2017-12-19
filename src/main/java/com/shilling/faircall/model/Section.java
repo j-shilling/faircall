@@ -39,7 +39,7 @@ public class Section {
 			for (String str : students.keySet()) {
 				Integer called = students.get(str);
 				if (called != null) {
-					this.students.put(str, called);
+					this.students.put(str, called.intValue());
 				}
 			}
 		}
@@ -122,6 +122,10 @@ public class Section {
 	@Override
 	public int hashCode() {
 		return Objects.hash(this.name);
+	}
+	
+	public Section copy () {
+		return new Section (this.name, this.students, this.lastCalled, this.random);
 	}
 }
 
