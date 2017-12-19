@@ -1,7 +1,10 @@
 package com.shilling.faircall.model;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 
@@ -18,11 +21,14 @@ public class Section {
 	private final Map<String, Integer> students;
 	@JsonProperty ("random")
 	private boolean random;
+	@JsonProperty ("last")
+	private String lastCalled;
 	
 	@JsonCreator
 	public Section (
 			@JsonProperty ("name") String name, 
 			@JsonProperty("students") Map<String, Integer> students,
+			@JsonProperty("last") String lastCalled,
 			@JsonProperty ("random") Boolean random) {
 		Preconditions.checkNotNull(name, "Every class must have a name.");
 		Preconditions.checkArgument(!name.isEmpty(), "Every class must have a name.");
@@ -39,6 +45,11 @@ public class Section {
 		}
 		
 		this.random = random == null ? true : random;
+		this.lastCalled = lastCalled;
+	}
+	
+	public Section (String name) {
+		this(name, null, null, null);
 	}
 	
 	public String getName() {
@@ -53,9 +64,30 @@ public class Section {
 		this.random = random;
 	}
 	
+	public String getLastCalled () {
+		return this.lastCalled;
+	}
+	
+	public void setLastCalled (String name) {
+		this.lastCalled = name;
+	}
+	
 	@JsonIgnore
-	public Set<String> getStudentNames() {
+	public Collection<String> getStudentNames() {
 		return this.students.keySet();
+	}
+	
+	@JsonIgnore Collection<Integer> getCalled() {
+		return this.students.values();
+	}
+	
+	@JsonIgnore
+	public Collection<Student> getStudents() {
+		Set<Student> ret = new HashSet<>();
+		for (Entry<String, Integer> e : this.students.entrySet()) {
+			ret.add(new Student (e.getKey(), e.getValue()));
+		}
+		return ret;
 	}
 	
 	public boolean addStudent (String student) {
@@ -69,6 +101,14 @@ public class Section {
 	
 	public boolean delStudent (String student) {
 		return null != this.students.remove(student);
+	}
+	
+	public void calledStudent (String name) {
+		Integer called = this.students.get(name);
+		if (called == null)
+			return;
+		
+		this.students.put(name, called + 1);
 	}
 	
 	@Override

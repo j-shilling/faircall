@@ -23,7 +23,6 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
@@ -41,6 +40,7 @@ public class Faircall extends Application
 	public static final Injector injector = Guice.createInjector(new FaircallModule());
 	
 	private final DataContainer data = injector.getInstance(DataContainer.class);
+	private final StudentListView students = injector.getInstance(StudentListView.class);
 	
     public static void main( String[] args )
     {
@@ -53,8 +53,7 @@ public class Faircall extends Application
 		HBox actionBar = new HBox();
 		GridPane content = new GridPane();
 		
-		ListView<String> students = new ListView<> (this.data.getObservableStudents());
-		pane.setLeft(students);
+		pane.setLeft(this.students);
 		pane.setTop (actionBar);
 		pane.setCenter(content);
 		pane.setCenterShape(true);
@@ -160,7 +159,7 @@ public class Faircall extends Application
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				String name = students.getSelectionModel().getSelectedItem();
+				String name = students.getSelected();
 				Faircall.this.data.deleteStudent(name);
 			}
 			
@@ -171,7 +170,7 @@ public class Faircall extends Application
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				String name = students.getSelectionModel().getSelectedItem();
+				String name = students.getSelected();
 				Faircall.this.data.absentStudent(name);
 			}
 			
@@ -195,6 +194,18 @@ public class Faircall extends Application
 		
 		Button undo = new Button ("Undo");
 		Button next = new Button ("Next");
+		next.setOnAction(new EventHandler<ActionEvent> () {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				Optional<String> result = Faircall.this.data.callStudent();
+				if (result.isPresent())
+					name.setText(result.get());
+				else
+					name.setText("Err");
+			}
+			
+		});
 		
 		ColumnConstraints col1 = new ColumnConstraints();
 		col1.setPercentWidth(50);

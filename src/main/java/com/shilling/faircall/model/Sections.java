@@ -64,7 +64,7 @@ public class Sections {
 		if (this.sections.containsKey(name))
 			return false;
 		
-		this.sections.put(name, new Section (name, null, null));
+		this.sections.put(name, new Section (name));
 		return true;
 	}
 	
