@@ -55,7 +55,8 @@ public class Sections {
 		if (null == this.cur)
 			return Optional.empty();
 		
-		return Optional.of(this.sections.get(cur));
+		Section ret = this.sections.get(cur);
+		return Optional.ofNullable(ret);
 	}
 	
 	public boolean addSection (String name) {

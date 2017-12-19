@@ -1,6 +1,7 @@
 package com.shilling.faircall;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Stack;
@@ -19,7 +20,12 @@ import javafx.collections.transformation.SortedList;
 
 @Singleton
 public class DataContainer {
-
+	
+	@FunctionalInterface
+	public interface ValueChangedListener <T> {
+		public void onValueChanged (T val);
+	}
+	
 	private Sections sections;
 	private final SectionsDAO dao;
 	private final Caller caller;
@@ -27,6 +33,8 @@ public class DataContainer {
 	private final ObservableList<Student> students;
 	
 	private final Stack<Sections> history;
+	
+	private final Collection<ValueChangedListener<Optional<Section>>> selectedListeners;
 	
 	private final Comparator<String> strcmp = new Comparator<String> () {
 		
@@ -54,6 +62,7 @@ public class DataContainer {
 		this.sections = sections;
 		this.caller = caller;
 		this.dao = dao;
+		this.selectedListeners = new ArrayList<>();
 		this.classes = 
 			FXCollections.observableList(new ArrayList<String> (sections.getSectionNames()));
 		
@@ -96,6 +105,8 @@ public class DataContainer {
 	public void unselect () {
 		this.sections.unselect();
 		this.students.clear();
+		for (ValueChangedListener<Optional<Section>> l : this.selectedListeners)
+			l.onValueChanged(this.getSelected());
 	}
 	
 	public void select (String name) {
@@ -105,6 +116,9 @@ public class DataContainer {
 		} else {
 			this.unselect();
 		}
+		
+		for (ValueChangedListener<Optional<Section>> l : this.selectedListeners)
+			l.onValueChanged(this.getSelected());
 	}
 	
 	public void createStudent (String name) {
@@ -195,6 +209,11 @@ public class DataContainer {
 		Optional<Section> cur = this.getSelected();
 		if (cur.isPresent())
 			this.students.addAll(cur.get().getStudents());
+	}
+	
+	public void addSelectionChangedListener (ValueChangedListener<Optional<Section>> l) {
+		Preconditions.checkNotNull(l);
+		this.selectedListeners.add(l);
 	}
 	
 }

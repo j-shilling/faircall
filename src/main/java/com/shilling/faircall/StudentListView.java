@@ -1,5 +1,7 @@
 package com.shilling.faircall;
 
+import java.util.Optional;
+
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.shilling.faircall.model.Student;
@@ -17,7 +19,7 @@ public class StudentListView extends ListView<Student> {
 		//this.data = data;
 	}
 	
-	public String getSelected () {
-		return this.getSelectionModel().getSelectedItem().getName();
+	public Optional<Student> getSelected () {
+		return Optional.ofNullable(this.getSelectionModel().getSelectedItem());
 	}
 }
