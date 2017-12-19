@@ -156,22 +156,10 @@ public class Faircall extends Application
 			
 		});
 		
-		Button absent = new Button ("Absent");
-		absent.setOnAction(new EventHandler<ActionEvent> () {
-
-			@Override
-			public void handle(ActionEvent arg0) {
-				String name = students.getSelected();
-				Faircall.this.data.absentStudent(name);
-			}
-			
-		});
-		
 		actionBar.getChildren().addAll(
 				addClass, 
 				addStudent,
 				classes, 
-				absent, 
 				deleteClass, 
 				deleteStudent,
 				mode);

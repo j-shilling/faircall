@@ -34,11 +34,14 @@ public class ContentArea extends GridPane {
 		this.students = this.data.getObservableStudents();
 		
 		ColumnConstraints col1 = new ColumnConstraints();
-		col1.setPercentWidth(50);
+		col1.setPercentWidth(25);
 		col1.setHalignment(HPos.LEFT);
 		ColumnConstraints col2 = new ColumnConstraints();
-		col2.setPercentWidth(50);
-		col2.setHalignment(HPos.RIGHT);
+		col2.setPercentWidth(25);
+		col2.setHalignment(HPos.LEFT);
+		ColumnConstraints col3 = new ColumnConstraints();
+		col3.setPercentWidth(50);
+		col3.setHalignment(HPos.RIGHT);
 		
 		RowConstraints row1 = new RowConstraints();
 		row1.setPercentHeight(80);
@@ -47,7 +50,7 @@ public class ContentArea extends GridPane {
 		row2.setPercentHeight(20);
 		row2.setValignment(VPos.CENTER);
 		
-		this.getColumnConstraints().addAll(col1, col2);
+		this.getColumnConstraints().addAll(col1, col2, col3);
 		this.getRowConstraints().addAll(row1, row2);
 		
 		Label name = new Label (this.data.lastCalled().isPresent() ? this.data.lastCalled().get() : "");
@@ -61,6 +64,19 @@ public class ContentArea extends GridPane {
 		
 		name.setFont(new Font ("Arial", 40));
 		
+		Button absent = new Button ("Absent");
+		absent.setOnAction(new EventHandler<ActionEvent> () {
+
+			@Override
+			public void handle(ActionEvent arg0) {
+				Optional<String> name = ContentArea.this.data.lastCalled();
+				if (name.isPresent())
+					ContentArea.this.data.absentStudent(name.get());
+				absent.setDisable(true);
+			}
+			
+		});
+		
 		Button undo = new Button ("Undo");
 		undo.setOnAction(new EventHandler<ActionEvent> () {
 
@@ -71,6 +87,7 @@ public class ContentArea extends GridPane {
 				
 				if (!ContentArea.this.data.canUndo())
 					undo.setDisable(true);
+				absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
 			}
 			
 		});
@@ -89,6 +106,7 @@ public class ContentArea extends GridPane {
 				
 				if (ContentArea.this.data.canUndo())
 					undo.setDisable(false);
+				absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
 			}
 			
 		});
@@ -102,9 +120,12 @@ public class ContentArea extends GridPane {
 			
 		});
 		
-		this.add(hbox, 0, 0, 2, 1);
+		absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
+		
+		this.add(hbox, 0, 0, 3, 1);
 		this.add(undo, 0, 1);
-		this.add(next, 1, 1);
+		this.add(absent, 1, 1);
+		this.add(next, 2, 1);
 		
 		this.setPadding(new Insets (15, 12, 15, 12));
 	}
