@@ -55,7 +55,8 @@ public class ContentArea extends GridPane {
 		this.getColumnConstraints().addAll(col1, col2, col3);
 		this.getRowConstraints().addAll(row1, row2);
 		
-		Label name = new Label ();
+		Label name = new Label (data.getLastCalled().isPresent() ?
+				data.getLastCalled().get() : "");
 		name.setWrapText(true);
 		name.setContentDisplay(ContentDisplay.CENTER);
 		name.setTextAlignment(TextAlignment.CENTER);
