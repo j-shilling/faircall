@@ -367,6 +367,25 @@ public class DataContainer {
 		return name;
 	}
 	
+	public void callStudent (Student student) {
+		if (student == null)
+			return;
+		
+		Optional<Section> cur = this.getSelected();
+		if (!cur.isPresent())
+			return;
+		
+		this.history.push(this.sections.copy());
+		this.setCanUndo(true);
+		
+		cur.get().calledStudent(student.getName());
+		cur.get().setLastCalled(student.getName());
+		this.setLastCalled(Optional.of(student.getName()));
+		
+		this.students.clear();
+		this.students.addAll(this.getSelected().get().getStudents());
+	}
+	
 	public void undo () {
 		if (this.getCanUndo()) {
 			this.setSections(this.history.pop());

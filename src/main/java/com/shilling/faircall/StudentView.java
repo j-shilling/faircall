@@ -8,8 +8,10 @@ import com.google.inject.Singleton;
 import com.shilling.faircall.model.Student;
 
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.util.Callback;
 
 @Singleton
 public class StudentView extends TableView<Student> {
@@ -36,6 +38,21 @@ public class StudentView extends TableView<Student> {
 		col2.setComparator(Integer::compare);
 		
 		this.getColumns().addAll(col1, col2);
+		
+		this.setRowFactory(new Callback<TableView<Student>, TableRow<Student>> () {
+
+			@Override
+			public TableRow<Student> call(TableView<Student> arg0) {
+				TableRow<Student> row = new TableRow<>();
+				row.setOnMouseClicked(event -> {
+					if (event.getClickCount() == 2 && !row.isEmpty())
+						data.callStudent(row.getItem());
+				});
+				
+				return row;
+			}
+			
+		});
 		
 		this.setItems(data.getObservableStudents());
 	}
