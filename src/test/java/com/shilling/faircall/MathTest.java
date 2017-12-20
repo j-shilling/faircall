@@ -34,5 +34,9 @@ public class MathTest extends TestCase {
 	public void testMin () {
 		assertEquals (67.75, this.math.min(this.data));
 	}
+	
+	public void testStandardDeviation () {
+		assertEquals (63.427561482021005, this.math.standardDeviation(this.data));
+	}
 
 }

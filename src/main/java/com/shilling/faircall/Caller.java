@@ -85,7 +85,11 @@ public class Caller {
 		if (available.size() < 2)
 			return Optional.empty();
 		
-		if (mode)
+		double sd = this.math.standardDeviation(available.stream()
+				.map(Student::getCalled)
+				.collect(Collectors.toList()));
+		
+		if (mode && (sd < 0.85))
 			return Optional.of(this.randCall(lastCalled, available));
 		else
 			return Optional.of(this.evenCall(lastCalled, available));
