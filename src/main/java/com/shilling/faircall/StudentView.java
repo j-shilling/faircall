@@ -3,7 +3,6 @@ package com.shilling.faircall;
 import java.util.Comparator;
 import java.util.Optional;
 
-import com.google.common.collect.ComparisonChain;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.shilling.faircall.model.Student;
@@ -14,15 +13,11 @@ import javafx.scene.control.cell.PropertyValueFactory;
 
 @Singleton
 public class StudentView extends TableView<Student> {
-	
-	private final DataContainer data;
 
 	@SuppressWarnings("unchecked")
 	@Inject
 	private StudentView (DataContainer data) {
 		this.setEditable(false);
-		
-		this.data = data;
 		
 		TableColumn<Student, String> col1 = new TableColumn<> ("Name");
 		col1.setCellValueFactory(
@@ -31,20 +26,7 @@ public class StudentView extends TableView<Student> {
 
 			@Override
 			public int compare(String a, String b) {
-				Optional<Student> x = data.getStudent(a);
-				Optional<Student> y = data.getStudent(b);
-				
-				if (x.isPresent() && y.isPresent())
-					return ComparisonChain.start()
-							.compare(x.get().getName(), y.get().getName())
-							.compare(x.get().getCalled(), y.get().getCalled())
-							.result();
-				else if (x.isPresent())
-					return 1;
-				else if (y.isPresent())
-					return -1;
-				else
-					return 0;
+				return a.compareTo(b);
 			}
 			
 		});

@@ -72,7 +72,16 @@ public class ToolBar extends VBox {
 			
 		});
 		addStudent.setDisable(!this.data.getSelected().isPresent());
-		this.data.addSelectionChangedListener(v -> addStudent.setDisable(!v.isPresent()) );
+		this.data.getSelectedProperty().addListener(new ChangeListener<Optional<Section>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<Section>> observable, 
+					Optional<Section> oldValue,
+					Optional<Section> newValue) {
+				addStudent.setDisable(!newValue.isPresent());
+			}
+			
+		});
 		
 		Button deleteClass = new Button ("Delete Class");
 		deleteClass.setOnAction(new EventHandler<ActionEvent> () {
@@ -84,7 +93,16 @@ public class ToolBar extends VBox {
 			
 		});
 		deleteClass.setDisable(!this.data.getSelected().isPresent());
-		this.data.addSelectionChangedListener(v -> deleteClass.setDisable(!v.isPresent()) );
+		this.data.getSelectedProperty().addListener(new ChangeListener<Optional<Section>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<Section>> observable, 
+					Optional<Section> oldValue,
+					Optional<Section> newValue) {
+				deleteClass.setDisable(!newValue.isPresent());
+			}
+			
+		});
 		
 		Button deleteStudent = new Button ("Delete Student");
 		deleteStudent.setOnAction(new EventHandler<ActionEvent> () {
@@ -137,37 +155,65 @@ public class ToolBar extends VBox {
 			}
 			
 		});
-		mode.getSelectionModel().select(true);
+		mode.getSelectionModel().select(data.getRandom());
 		mode.getSelectionModel().selectedItemProperty().addListener(
 				new ChangeListener<Boolean> () {
 
 					@Override
 					public void changed(ObservableValue<? extends Boolean> arg0,
 							Boolean old, Boolean cur) {
-						ToolBar.this.data.setMode(cur);
+						ToolBar.this.data.setRandom(cur);
 					}
 					
 				});
-		mode.setDisable(!this.data.getSelected().isPresent());
-		this.data.addSelectionChangedListener(v -> mode.setDisable(!v.isPresent()) );
+		this.data.getSelectedProperty().addListener(new ChangeListener<Optional<Section>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<Section>> observable, 
+					Optional<Section> oldValue,
+					Optional<Section> newValue) {
+				mode.setDisable(!newValue.isPresent());
+			}
+			
+		});
+		this.data.getRandomProperty().addListener(new ChangeListener<Boolean> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable,
+					Boolean oldValue, Boolean newValue) {
+				mode.getSelectionModel().select(newValue);
+			}
+			
+		});
 		
 		ChoiceBox<String> classes = 
 				new ChoiceBox<String> (this.data.getObservableClasses());
 		classes.setTooltip(new Tooltip ("Select open class"));
-		
-		Optional<Section> selected = this.data.getSelected();
-		if (selected.isPresent()) {
-			classes.getSelectionModel().select(selected.get().getName());
-		}
+		if (data.getSelected().isPresent())
+			classes.getSelectionModel().select(data.getSelected().get().getName());
 		classes.getSelectionModel().selectedItemProperty().addListener(
 				new ChangeListener<String> () {
 
 					@Override
-					public void changed(ObservableValue<? extends String> arg0, String old, String selection) {
+					public void changed(ObservableValue<? extends String> arg0,
+							String old, String selection) {
 						ToolBar.this.data.select(selection);
-						mode.getSelectionModel().select(ToolBar.this.data.getMode());
 					}
 				});
+		data.getSelectedProperty().addListener(new ChangeListener<Optional<Section>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<Section>> observable, 
+					Optional<Section> oldValue,
+					Optional<Section> newValue) {
+				if (newValue.isPresent()) {
+					classes.getSelectionModel().select(newValue.get().getName());
+				} else {
+					classes.getSelectionModel().select(null);
+				}
+			}
+			
+		});
 		
 		choices.getChildren().addAll(classes, mode);
 		

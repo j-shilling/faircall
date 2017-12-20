@@ -1,8 +1,5 @@
 package com.shilling.faircall;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -14,28 +11,41 @@ import com.shilling.faircall.model.Section;
 import com.shilling.faircall.model.Sections;
 import com.shilling.faircall.model.Student;
 
+import javafx.beans.property.adapter.JavaBeanBooleanProperty;
+import javafx.beans.property.adapter.JavaBeanBooleanPropertyBuilder;
+import javafx.beans.property.adapter.JavaBeanObjectPropertyBuilder;
+import javafx.beans.property.adapter.ReadOnlyJavaBeanProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.SortedList;
 
 @Singleton
 public class DataContainer {
 	
-	@FunctionalInterface
-	public interface ValueChangedListener <T> {
-		public void onValueChanged (T val);
-	}
-	
-	private Sections sections;
 	private final SectionsDAO dao;
 	private final Caller caller;
-	private final ObservableList<String> classes;
-	private final ObservableList<Student> students;
 	
 	private final Stack<Sections> history;
 	
-	private final Collection<ValueChangedListener<Optional<Section>>> selectedListeners;
+	private final ReadOnlyJavaBeanProperty <Sections> sectionsProperty;
+	private Sections sections;
+	private final ReadOnlyJavaBeanProperty <Optional<Section>> selectedProperty;
+	private Optional<Section> selected = Optional.empty();
+	private final ReadOnlyJavaBeanProperty <Optional<String>> lastCalledProperty;
+	private Optional<String> lastCalled = Optional.empty();
+	private final JavaBeanBooleanProperty canUndoProperty;
+	private boolean canUndo = false;
+	private final JavaBeanBooleanProperty canCallProperty;
+	private boolean canCall = false;
+	private final JavaBeanBooleanProperty randomProperty;
+	private boolean random = true;
 	
+	private final ObservableList<String> classes;
+	private final ObservableList<Student> students;
+	
+	@SuppressWarnings("unchecked")
 	@Inject
 	public DataContainer (Sections sections, Caller caller, SectionsDAO dao) {
 		Preconditions.checkNotNull(sections);
@@ -44,17 +54,213 @@ public class DataContainer {
 		this.sections = sections;
 		this.caller = caller;
 		this.dao = dao;
-		this.selectedListeners = new ArrayList<>();
 		this.classes = 
-			FXCollections.observableList(new ArrayList<String> (sections.getSectionNames()));
+			FXCollections.observableArrayList(sections.getSectionNames());
+		this.students =
+			FXCollections.observableArrayList();
+
+		/* Set up observable properties */
+		ReadOnlyJavaBeanProperty <Sections> sectionsProperty = null;
+		ReadOnlyJavaBeanProperty <Optional<Section>> selected = null;
+		ReadOnlyJavaBeanProperty <Optional<String>> lastCalled = null;
+		JavaBeanBooleanProperty canCall = null;
+		JavaBeanBooleanProperty canUndo = null;
+		JavaBeanBooleanProperty random = null;
+		try {
+			sectionsProperty = JavaBeanObjectPropertyBuilder.create()
+					.bean(this)
+					.name("sections")
+					.build();
+			selected = JavaBeanObjectPropertyBuilder.create()
+					.bean(this)
+					.name("selected")
+					.build();
+			lastCalled = JavaBeanObjectPropertyBuilder.create()
+					.bean(this)
+					.name("lastCalled")
+					.build();
+			canCall = JavaBeanBooleanPropertyBuilder.create()
+					.bean(this)
+					.name("canCall")
+					.build();
+			canUndo = JavaBeanBooleanPropertyBuilder.create()
+					.bean(this)
+					.name("canUndo")
+					.build();
+			random = JavaBeanBooleanPropertyBuilder.create()
+					.bean(this)
+					.name("random")
+					.build();
+		} catch (NoSuchMethodException e) {
+			e.printStackTrace();
+		}
 		
-		Optional<Section> cur = this.sections.getSelected();
-		if (cur.isPresent())
-			this.students =
-				FXCollections.observableList(new ArrayList<Student> (cur.get().getStudents()));
-		else
-			this.students =
-				FXCollections.observableList(new ArrayList<Student> ());
+		this.sectionsProperty = sectionsProperty;
+		this.selectedProperty = selected;
+		this.lastCalledProperty = lastCalled;
+		this.canCallProperty = canCall;
+		this.canUndoProperty = canUndo;
+		this.randomProperty = random;
+		
+		/* Bind internal properties */
+		this.getSectionsProperty().addListener(new ChangeListener<Sections> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Sections> observable,
+					Sections oldValue, 
+					Sections newValue) {
+				DataContainer.this.setSelected(newValue.getSelected());
+				DataContainer.this.classes.clear();
+				DataContainer.this.classes.addAll(newValue.getSectionNames());
+				DataContainer.this.dao.save(DataContainer.this.getSections());
+			}
+			
+		});
+		
+		this.getSelectedProperty().addListener(new ChangeListener<Optional<Section>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<Section>> observable, 
+					Optional<Section> oldValue,
+					Optional<Section> newValue) {
+				if (newValue.isPresent()) {
+					DataContainer.this.setLastCalled(newValue.get().getLastCalled());
+					DataContainer.this.students.clear();
+					DataContainer.this.students.addAll(newValue.get().getStudents());
+					DataContainer.this.setRandom(newValue.get().getRandom());
+				} else {
+					DataContainer.this.setLastCalled(Optional.empty());
+					DataContainer.this.students.clear();
+				}
+				
+				DataContainer.this.dao.save(DataContainer.this.getSections());
+			}
+			
+		});
+		
+		this.getLastCalledProperty().addListener(new ChangeListener<Optional<String>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<String>> arg0, Optional<String> arg1,
+					Optional<String> arg2) {
+				DataContainer.this.dao.save(DataContainer.this.getSections());
+			}
+			
+		});
+		
+		this.getObservableStudents().addListener(new ListChangeListener<Student> () {
+
+			@Override
+			public void onChanged(Change<? extends Student> change) {
+				DataContainer.this.setCanCall(change.getList().size() > 2);
+			}
+			
+		});
+		
+		this.getRandomProperty().addListener(new ChangeListener<Boolean> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Boolean> observable, 
+					Boolean oldValue, Boolean newValue) {
+				if (DataContainer.this.getSelected().isPresent()) {
+					DataContainer.this.getSelected().get().setRandom(newValue);
+					DataContainer.this.dao.save(DataContainer.this.sections);
+				}
+			}
+			
+		});
+		
+		/* Set initial values */
+		this.setSections(sections);
+		this.setSelected(sections.getSelected());
+		if (sections.getSelected().isPresent()) {
+			this.setLastCalled(sections.getSelected().get().getLastCalled());
+			this.setRandom(sections.getSelected().get().getRandom());
+			this.students.addAll(sections.getSelected().get().getStudents());
+		}
+	}
+	
+	/* Property Methods */
+	public void setSections (Sections sections) {
+		Preconditions.checkNotNull(sections);
+		this.sections = sections;
+		this.getSectionsProperty().fireValueChangedEvent();
+	}
+	
+	public Sections getSections () {
+		return this.sections;
+	}
+	
+	public ReadOnlyJavaBeanProperty <Sections> getSectionsProperty() {
+		return this.sectionsProperty;
+	}
+	
+	public void setSelected (Optional<Section> selected) {
+		Preconditions.checkNotNull(selected);
+		this.selected = selected;
+		this.getSelectedProperty().fireValueChangedEvent();
+	}
+	
+	public Optional<Section> getSelected () {
+		return this.selected;
+	}
+	
+	public ReadOnlyJavaBeanProperty <Optional<Section>> getSelectedProperty () {
+		return this.selectedProperty;
+	}
+	
+	public void setLastCalled (Optional<String> lastCalled) {
+		Preconditions.checkNotNull(lastCalled);
+		Preconditions.checkArgument(!lastCalled.isPresent() || !lastCalled.get().isEmpty());
+		this.lastCalled = lastCalled;
+		this.getLastCalledProperty().fireValueChangedEvent();
+	}
+	
+	public Optional<String> getLastCalled () {
+		return this.lastCalled;
+	}
+	
+	public ReadOnlyJavaBeanProperty <Optional<String>> getLastCalledProperty() {
+		return this.lastCalledProperty;
+	}
+	
+	public void setCanUndo (boolean canUndo) {
+		this.canUndo = canUndo;
+		this.getCanUndoProperty().fireValueChangedEvent();
+	}
+	
+	public boolean getCanUndo () {
+		return this.canUndo;
+	}
+	
+	public JavaBeanBooleanProperty getCanUndoProperty() {
+		return this.canUndoProperty;
+	}
+	
+	public void setCanCall (boolean canCall) {
+		this.canCall = canCall;
+		this.getCanCallProperty().fireValueChangedEvent();
+	}
+	
+	public boolean getCanCall() {
+		return this.canCall;
+	}
+	
+	public JavaBeanBooleanProperty getCanCallProperty() {
+		return this.canCallProperty;
+	}
+	
+	public void setRandom (boolean canCall) {
+		this.random = canCall;
+		this.getRandomProperty().fireValueChangedEvent();
+	}
+	
+	public boolean getRandom() {
+		return this.random;
+	}
+	
+	public JavaBeanBooleanProperty getRandomProperty() {
+		return this.randomProperty;
 	}
 	
 	public ObservableList<String> getObservableClasses() {
@@ -65,18 +271,15 @@ public class DataContainer {
 		return this.students;
 	}
 	
-	public Optional<Student> getStudent (String name) {
-		Optional<Section> cur = this.getSelected();
-		if (cur.isPresent())
-			return cur.get().getStudent(name);
-		else
-			return Optional.empty();
-	}
+	
+	/* Main Operations */
 	
 	public void createClass (String name) {
 		if (this.sections.addSection(name)) {
 			this.classes.add(name);
+			this.select(name);
 			this.dao.save(this.sections);
+			
 		}
 	}
 	
@@ -89,26 +292,19 @@ public class DataContainer {
 			}
 		}
 		this.unselect();
-		
 	}
 	
 	public void unselect () {
 		this.sections.unselect();
-		this.students.clear();
-		for (ValueChangedListener<Optional<Section>> l : this.selectedListeners)
-			l.onValueChanged(this.getSelected());
+		this.setSelected(Optional.empty());
 	}
 	
 	public void select (String name) {
 		if (this.sections.select(name)) {
-			this.students.clear();
-			this.students.addAll(this.sections.getSelected().get().getStudents());
+			this.setSelected(this.sections.getSelected());
 		} else {
-			this.unselect();
+			this.setSelected(Optional.empty());
 		}
-		
-		for (ValueChangedListener<Optional<Section>> l : this.selectedListeners)
-			l.onValueChanged(this.getSelected());
 	}
 	
 	public void createStudent (String name) {
@@ -132,24 +328,8 @@ public class DataContainer {
 	}
 	
 	public void absentStudent (String name) {
+		this.undo();
 		this.students.remove(new Student (name));
-	}
-	
-	public Optional<Section> getSelected () {
-		return this.sections.getSelected();
-	}
-	
-	public boolean getMode () {
-		Optional<Section> selected = this.getSelected();
-		return selected.isPresent() ? selected.get().getRandom() : true;
-	}
-	
-	public void setMode (boolean mode) {
-		Optional<Section> selected = this.getSelected();
-		if (selected.isPresent()) {
-			selected.get().setRandom(mode);
-			this.dao.save(this.sections);
-		}
 	}
 	
 	public Optional<String> callStudent () {
@@ -159,51 +339,38 @@ public class DataContainer {
 		
 		Optional<String> name = 
 				this.caller.callStudent(
-						cur.get().getLastCalled(), 
+						cur.get().getLastCalled().isPresent() ? cur.get().getLastCalled().get() : null, 
 						this.getObservableStudents(), 
 						cur.get().getRandom());
 		
 		if (name.isPresent()) {
 			this.history.push(this.sections.copy());
+			this.setCanUndo(true);
 			
 			cur.get().calledStudent(name.get());
 			cur.get().setLastCalled(name.get());
+			this.setLastCalled(name);
+			
 			this.students.clear();
-			this.students.addAll(cur.get().getStudents());
-			this.dao.save(this.sections);
+			this.students.addAll(this.getSelected().get().getStudents());
 		}
 		
 		return name;
 	}
 	
-	public Optional<String> lastCalled () {
-		Optional<Section> cur = this.getSelected();
-		if (cur.isPresent())
-			return Optional.ofNullable(cur.get().getLastCalled());
-		else
-			return Optional.empty();
-	}
-	
-	public boolean canUndo () {
-		return !this.history.isEmpty();
-	}
-	
 	public void undo () {
-		if (this.history.isEmpty())
-			return;
-		
-		this.sections = this.history.pop();
-		this.dao.save(this.sections);
-		
-		this.students.clear();
-		Optional<Section> cur = this.getSelected();
-		if (cur.isPresent())
-			this.students.addAll(cur.get().getStudents());
-	}
-	
-	public void addSelectionChangedListener (ValueChangedListener<Optional<Section>> l) {
-		Preconditions.checkNotNull(l);
-		this.selectedListeners.add(l);
+		if (this.getCanUndo()) {
+			this.setSections(this.history.pop());
+			this.setSections(sections);
+			this.setSelected(sections.getSelected());
+			if (sections.getSelected().isPresent()) {
+				this.setLastCalled(sections.getSelected().get().getLastCalled());
+				this.setRandom(sections.getSelected().get().getRandom());
+				this.students.clear();
+				this.students.addAll(sections.getSelected().get().getStudents());
+			}
+			this.setCanUndo(!this.history.isEmpty());
+		}
 	}
 	
 }

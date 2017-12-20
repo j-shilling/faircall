@@ -5,6 +5,8 @@ import java.util.Optional;
 import com.google.inject.Inject;
 import com.shilling.faircall.model.Student;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -53,10 +55,23 @@ public class ContentArea extends GridPane {
 		this.getColumnConstraints().addAll(col1, col2, col3);
 		this.getRowConstraints().addAll(row1, row2);
 		
-		Label name = new Label (this.data.lastCalled().isPresent() ? this.data.lastCalled().get() : "");
+		Label name = new Label ();
 		name.setWrapText(true);
 		name.setContentDisplay(ContentDisplay.CENTER);
 		name.setTextAlignment(TextAlignment.CENTER);
+		data.getLastCalledProperty().addListener(new ChangeListener<Optional<String>> () {
+
+			@Override
+			public void changed(ObservableValue<? extends Optional<String>> observable,
+					Optional<String> oldValue,
+					Optional<String> newValue) {
+				if (newValue.isPresent())
+					name.setText(newValue.get());
+				else
+					name.setText("");
+			}
+			
+		});
 		
 		HBox hbox = new HBox();
 		hbox.setAlignment(Pos.CENTER);
@@ -69,12 +84,22 @@ public class ContentArea extends GridPane {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				Optional<String> name = ContentArea.this.data.lastCalled();
+				Optional<String> name = ContentArea.this.data.getLastCalled();
 				if (name.isPresent()) {
-					ContentArea.this.data.undo();
 					ContentArea.this.data.absentStudent(name.get());
 				}
 				absent.setDisable(true);
+			}
+			
+		});
+		data.getCanUndoProperty().addListener(new ChangeListener<Boolean> () {
+
+			@Override
+			public void changed(
+					ObservableValue<? extends Boolean> observable,
+					Boolean oldValue, 
+					Boolean newValue) {
+				absent.setDisable(newValue == null ? true : !newValue.booleanValue());
 			}
 			
 		});
@@ -85,11 +110,17 @@ public class ContentArea extends GridPane {
 			@Override
 			public void handle(ActionEvent arg0) {
 				ContentArea.this.data.undo();
-				name.setText(data.lastCalled().isPresent() ? data.lastCalled().get() : "");
-				
-				if (!ContentArea.this.data.canUndo())
-					undo.setDisable(true);
-				absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
+			}
+			
+		});
+		data.getCanUndoProperty().addListener(new ChangeListener<Boolean> () {
+
+			@Override
+			public void changed(
+					ObservableValue<? extends Boolean> observable,
+					Boolean oldValue, 
+					Boolean newValue) {
+				undo.setDisable(newValue == null ? true : !newValue.booleanValue());
 			}
 			
 		});
@@ -100,15 +131,8 @@ public class ContentArea extends GridPane {
 
 			@Override
 			public void handle(ActionEvent arg0) {
-				Optional<String> result = ContentArea.this.data.callStudent();
-				if (result.isPresent())
-					name.setText(result.get());
-				else
-					name.setText("Err");
-				
-				if (ContentArea.this.data.canUndo())
-					undo.setDisable(false);
-				absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
+				ContentArea.this.data.callStudent();
+				absent.setDisable(!ContentArea.this.data.getLastCalled().isPresent());
 			}
 			
 		});
@@ -122,7 +146,7 @@ public class ContentArea extends GridPane {
 			
 		});
 		
-		absent.setDisable(!ContentArea.this.data.lastCalled().isPresent());
+		absent.setDisable(!ContentArea.this.data.getLastCalled().isPresent());
 		
 		this.add(hbox, 0, 0, 3, 1);
 		this.add(undo, 0, 1);

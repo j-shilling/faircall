@@ -65,8 +65,9 @@ public class Section {
 		this.random = random;
 	}
 	
-	public String getLastCalled () {
-		return this.lastCalled;
+	@JsonIgnore
+	public Optional<String> getLastCalled () {
+		return Optional.ofNullable(this.lastCalled);
 	}
 	
 	public void setLastCalled (String name) {
