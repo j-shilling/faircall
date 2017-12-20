@@ -1,7 +1,10 @@
 package com.shilling.faircall;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
@@ -45,6 +48,8 @@ public class DataContainer {
 	private final ObservableList<String> classes;
 	private final ObservableList<Student> students;
 	
+	private final List<Student> absent;
+	
 	@SuppressWarnings("unchecked")
 	@Inject
 	public DataContainer (Sections sections, Caller caller, SectionsDAO dao) {
@@ -58,6 +63,7 @@ public class DataContainer {
 			FXCollections.observableArrayList(sections.getSectionNames());
 		this.students =
 			FXCollections.observableArrayList();
+		this.absent = new ArrayList<>();
 
 		/* Set up observable properties */
 		ReadOnlyJavaBeanProperty <Sections> sectionsProperty = null;
@@ -133,6 +139,7 @@ public class DataContainer {
 					DataContainer.this.students.clear();
 				}
 				
+				DataContainer.this.absent.clear();
 				DataContainer.this.dao.save(DataContainer.this.getSections());
 			}
 			
@@ -329,7 +336,7 @@ public class DataContainer {
 	
 	public void absentStudent (String name) {
 		this.undo();
-		this.students.remove(new Student (name));
+		this.absent.add(new Student (name));
 	}
 	
 	public Optional<String> callStudent () {
@@ -340,7 +347,9 @@ public class DataContainer {
 		Optional<String> name = 
 				this.caller.callStudent(
 						cur.get().getLastCalled().isPresent() ? cur.get().getLastCalled().get() : null, 
-						this.getObservableStudents(), 
+						this.getObservableStudents().stream()
+							.filter(s -> !absent.contains(s))
+							.collect(Collectors.toList()), 
 						cur.get().getRandom());
 		
 		if (name.isPresent()) {
