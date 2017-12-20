@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
@@ -88,6 +89,16 @@ public class Section {
 			ret.add(new Student (e.getKey(), e.getValue()));
 		}
 		return ret;
+	}
+	
+	@JsonIgnore
+	public Optional<Student> getStudent(String name) {
+		Integer called = this.students.get(name);
+		
+		if (called == null)
+			return Optional.empty();
+		else
+			return Optional.of(new Student (name, called));
 	}
 	
 	public boolean addStudent (String student) {

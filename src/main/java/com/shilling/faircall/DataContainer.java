@@ -36,24 +36,6 @@ public class DataContainer {
 	
 	private final Collection<ValueChangedListener<Optional<Section>>> selectedListeners;
 	
-	private final Comparator<String> strcmp = new Comparator<String> () {
-		
-		@Override
-		public int compare(String x, String y) {
-			return x.compareTo(y);
-		}
-		
-	};
-	
-	private final Comparator<Student> stucmp = new Comparator<Student> () {
-
-		@Override
-		public int compare(Student x, Student y) {
-			return x.compareTo(y);
-		}
-		
-	};
-	
 	@Inject
 	public DataContainer (Sections sections, Caller caller, SectionsDAO dao) {
 		Preconditions.checkNotNull(sections);
@@ -76,11 +58,19 @@ public class DataContainer {
 	}
 	
 	public ObservableList<String> getObservableClasses() {
-		return new SortedList<String> (this.classes, this.strcmp);
+		return this.classes;
 	}
 	
 	public ObservableList<Student> getObservableStudents() {
-		return new SortedList<Student> (this.students, this.stucmp);
+		return this.students;
+	}
+	
+	public Optional<Student> getStudent (String name) {
+		Optional<Section> cur = this.getSelected();
+		if (cur.isPresent())
+			return cur.get().getStudent(name);
+		else
+			return Optional.empty();
 	}
 	
 	public void createClass (String name) {
