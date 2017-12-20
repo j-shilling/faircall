@@ -100,7 +100,20 @@ public class ContentArea extends GridPane {
 					ObservableValue<? extends Boolean> observable,
 					Boolean oldValue, 
 					Boolean newValue) {
-				absent.setDisable(newValue == null ? true : !newValue.booleanValue());
+				absent.setDisable(
+						(newValue == null ? true : !newValue.booleanValue())
+						&& data.getLastCalled().isPresent());
+			}
+			
+		});
+		data.getLastCalledProperty().addListener(new ChangeListener<Optional<String>> () {
+
+			@Override
+			public void changed(
+					ObservableValue<? extends Optional<String>> observable,
+							Optional<String> oldValue, 
+							Optional<String> newValue) {
+				absent.setDisable(newValue.isPresent() && data.getCanUndo());
 			}
 			
 		});

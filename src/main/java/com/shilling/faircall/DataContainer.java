@@ -388,6 +388,8 @@ public class DataContainer {
 	
 	public void undo () {
 		if (this.getCanUndo()) {
+			List<Student> tmp = new ArrayList (this.absent);
+			
 			this.setSections(this.history.pop());
 			this.setSections(sections);
 			this.setSelected(sections.getSelected());
@@ -396,6 +398,8 @@ public class DataContainer {
 				this.setRandom(sections.getSelected().get().getRandom());
 				this.students.clear();
 				this.students.addAll(sections.getSelected().get().getStudents());
+				this.absent.clear();
+				this.absent.addAll(tmp);
 			}
 			this.setCanUndo(!this.history.isEmpty());
 		}
