@@ -89,7 +89,6 @@ public class ContentArea extends GridPane {
 				if (name.isPresent()) {
 					ContentArea.this.data.absentStudent(name.get());
 				}
-				absent.setDisable(true);
 			}
 			
 		});
