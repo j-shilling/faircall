@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import com.shilling.faircall.ContentControl?>
+<?import com.shilling.faircall.DetailsControl?>
+
+<fx:root    type="javafx.scene.layout.GridPane"
+            id="root"
+            prefHeight="400" prefWidth="600" 
+            xmlns:fx="http://javafx.com/fxml" >
+    
+    <children>
+        <GridPane
+            GridPane.columnIndex="0" GridPane.rowIndex="0"
+            GridPane.columnSpan="2">
+            
+            <children>
+                
+                <HBox
+                    id="dets-box" 
+                    GridPane.columnIndex="0" GridPane.rowIndex="0">
+                    
+                    <Button fx:id="dets" onAction="#toggleDets" >Hide Details</Button>
+                    
+                </HBox>
+                
+                <HBox 
+                    id="full-box"
+                    GridPane.columnIndex="1" GridPane.rowIndex="0">
+                    
+                    <Button fx:id="full" onAction="#toggleFull" >Fullscreen</Button>
+                    
+                </HBox>
+                
+            </children>
+            
+            <columnConstraints>
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+                <ColumnConstraints hgrow="ALWAYS" percentWidth="50.0" />
+            </columnConstraints>
+        
+        </GridPane>
+        
+        
+        <DetailsControl fx:id="detailsControl" GridPane.columnIndex="0" GridPane.rowIndex="1"/>
+        <ContentControl GridPane.columnIndex="1" GridPane.rowIndex="1"/>
+    </children>
+    
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" percentWidth="50.0" />
+        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" percentWidth="50.0" />
+    </columnConstraints>
+    
+    <rowConstraints>
+        <RowConstraints minHeight="10.0" percentHeight="10.0" vgrow="ALWAYS" />
+        <RowConstraints minHeight="10.0" percentHeight="90.0" vgrow="ALWAYS" />
+    </rowConstraints>
+    
+</fx:root>

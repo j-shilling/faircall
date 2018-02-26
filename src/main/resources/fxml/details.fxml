@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root    type="javafx.scene.layout.GridPane"
+            xmlns:fx="http://javafx.com/fxml">
+    
+    <children>
+        <HBox GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <ComboBox fx:id="profiles"></ComboBox>
+            <Button id="manage-profiles">Manage</Button>
+        </HBox>
+    </children>
+            
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" percentWidth="100.0" />
+    </columnConstraints>
+            
+    
+</fx:root>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<fx:root    type="javafx.scene.layout.GridPane"
+            xmlns:fx="http://javafx.com/fxml">
+    
+    <children>
+                
+                
+        <HBox id="name-box" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <Label id="name" text="Name"/>
+        </HBox>
+                
+        <HBox id="btn-box" GridPane.columnIndex="0" GridPane.rowIndex="1">
+            <Button>Undo</Button>
+            <Button>Absent</Button>
+            <Button id="next">Next</Button>
+        </HBox>
+                
+    </children>
+            
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" percentWidth="100.0" prefWidth="100.0" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" percentHeight="80.0" vgrow="ALWAYS" />
+        <RowConstraints minHeight="10.0" prefHeight="60.0" percentHeight="20.0" vgrow="ALWAYS" />
+    </rowConstraints>
+    
+</fx:root>
